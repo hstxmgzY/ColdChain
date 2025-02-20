@@ -4,13 +4,15 @@ import PersonCard from "../../components/home/personCard";
 import VehicleTable from "../../components/home/vehicleTable";
 import StatsCards from "../../components/home/statsCards";
 import { getData } from "../../api";
+import MilesChart from "../../components/home/charts/milesChart";
+import OrderChart from "../../components/home/charts/orderChart";
 
 const Home = () => {
     useEffect(() => {
-        getData().then(()=>{
-            
+        getData().then(() => {
+
         })
-    },[])
+    }, [])
     return (
         <div>
             <Row gutter={30}>
@@ -27,8 +29,8 @@ const Home = () => {
                         <Col span={24}><StatsCards /></Col>
                     </Row>
                     <Row gutter={16}>
-                        <Col span={12}><VehicleTable /></Col>
-                        <Col span={12}><VehicleTable /></Col>
+                        <Col span={14}><MilesChart /></Col>
+                        <Col span={10}><OrderChart /></Col>
                     </Row>
                 </Col>
             </Row>

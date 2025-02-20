@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Icon from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Menu, Layout } from 'antd';
 import logo from '../../../assets/logo-white.png';
 import { CommonAsideProps } from '../../../interface/common/commonAside';
@@ -38,11 +38,13 @@ const items = MenuConfig.map((item) => {
 
 const CommonAside: React.FC<CommonAsideProps> = ({ collapsed }) => {
   const navigate = useNavigate()
+  const location = useLocation()
 
   // 点击菜单项时，使用 navigate 跳转到对应的路由
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key)
   }
+  
   return (
     <Sider trigger={null} collapsible collapsed={collapsed}>
       <div className='logo'>
@@ -52,7 +54,7 @@ const CommonAside: React.FC<CommonAsideProps> = ({ collapsed }) => {
         onClick={handleMenuClick}
         theme="dark"
         mode="inline"
-        defaultSelectedKeys={['/home']}
+        defaultSelectedKeys={[location.pathname]}
         items={items}
         style={{ height: '100%' }}
       />

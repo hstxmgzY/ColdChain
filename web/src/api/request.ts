@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosRequestConfig, Method } from "axios"
 import { message } from "antd"
 
 const service = axios.create({
-    baseURL: "http://localhost:9000",
+    baseURL: "http://localhost:9000/api",
     timeout: 3000,
     withCredentials: false,
 })
@@ -62,7 +62,7 @@ service.interceptors.response.use(
             errMessage = "网络连接失败"
         }
 
-        message.error(errMessage)
+        // message.error(errMessage)
         return Promise.reject(error)
     }
 )
@@ -96,7 +96,6 @@ export const http = {
 
     post: <T>(url: string, data?: object, config?: AxiosRequestConfig) =>
         request<T>(url, "POST", data, config),
-
     put: <T>(url: string, data?: object, config?: AxiosRequestConfig) =>
         request<T>(url, "PUT", data, config),
 

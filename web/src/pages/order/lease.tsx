@@ -1,9 +1,10 @@
 import React from "react";
+import LeaseTable from "../../components/order/leaseTable";
 
 const Lease = () => {
     return (
         <div>
-            <h1>Lease Page</h1>
+            <LeaseTable />
         </div>
     )
 }
