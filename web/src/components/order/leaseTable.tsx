@@ -23,23 +23,20 @@ import { createStyles } from "antd-style"
 import { LeaseType } from "../../interface/order/lease"
 // import '../../mock/leaseMock'
 
-const useStyle = createStyles(({ css, token }) => {
-    const { antCls } = token
-    return {
-        customTable: css`
-            ${antCls}-table {
-                ${antCls}-table-container {
-                    ${antCls}-table-body,
-                    ${antCls}-table-content {
-                        scrollbar-width: thin;
-                        scrollbar-color: #eaeaea transparent;
-                        scrollbar-gutter: stable;
-                    }
+// 修正 createStyles 语法
+const useStyle = createStyles(({ css }) => ({
+    customTable: css`
+        .ant-table {
+            .ant-table-container {
+                .ant-table-body,
+                .ant-table-content {
+                    scrollbar-width: thin;
+                    scrollbar-color: #eaeaea transparent;
                 }
             }
-        `,
-    }
-})
+        }
+    `,
+}))
 
 const { Search } = Input
 const { Text } = Typography
@@ -51,6 +48,16 @@ const LeaseTable: React.FC = () => {
     const [editingLease, setEditingLease] = useState<LeaseType | null>(null)
     const [form] = Form.useForm()
     const [loading, setLoading] = useState(false)
+    const [searchParams, setSearchParams] = useState({
+        orderNumber: "",
+        status: "",
+        senderName: "",
+        senderPhone: "",
+        senderAddress: "",
+        receiverName: "",
+        receiverPhone: "",
+        receiverAddress: "",
+    })
 
     useEffect(() => {
         if (modalVisible && editingLease) {
@@ -59,6 +66,49 @@ const LeaseTable: React.FC = () => {
             form.resetFields()
         }
     }, [modalVisible, editingLease, form])
+
+    useEffect(() => {
+        if (!data) return // 防止 data 为空时报错
+
+        setFilteredData(
+            data.filter((item) => {
+                return (
+                    (!searchParams.orderNumber ||
+                        item.order_number.includes(searchParams.orderNumber)) &&
+                    (!searchParams.status ||
+                        item.status === searchParams.status) &&
+                    (!searchParams.senderName ||
+                        item.sender_name.includes(searchParams.senderName)) &&
+                    (!searchParams.senderPhone ||
+                        item.sender_phone.includes(searchParams.senderPhone)) &&
+                    (!searchParams.senderAddress ||
+                        item.sender_address.includes(
+                            searchParams.senderAddress
+                        )) &&
+                    (!searchParams.receiverName ||
+                        item.receiver_name.includes(
+                            searchParams.receiverName
+                        )) &&
+                    (!searchParams.receiverPhone ||
+                        item.receiver_phone.includes(
+                            searchParams.receiverPhone
+                        )) &&
+                    (!searchParams.receiverAddress ||
+                        item.receiver_address.includes(
+                            searchParams.receiverAddress
+                        ))
+                )
+            })
+        )
+    }, [data, searchParams])
+
+    // 所有搜索处理函数
+    const handleSearch = (field: keyof typeof searchParams, value: string) => {
+        setSearchParams((prev) => ({
+            ...prev,
+            [field]: value ? value.trim() : "",
+        }))
+    }
 
     const fetchLeases = async () => {
         setLoading(true)
@@ -76,100 +126,6 @@ const LeaseTable: React.FC = () => {
     useEffect(() => {
         fetchLeases()
     }, [])
-
-    const onSearchId = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.order_number.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchStatus = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) => order.status.includes(value))
-            )
-        }
-    }
-
-    const onSearchSenderName = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.sender_name.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchSenderPhone = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.sender_phone.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchSenderAddress = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.sender_address.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchReceiverName = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.receiver_name.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchReceiverPhone = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.receiver_phone.includes(value)
-                )
-            )
-        }
-    }
-
-    const onSearchReceiverAddress = (value: string) => {
-        if (!value.trim()) {
-            setFilteredData(data)
-        } else {
-            setFilteredData(
-                data.filter((order: LeaseType) =>
-                    order.receiver_address.includes(value)
-                )
-            )
-        }
-    }
 
     const handleDelete = async (id: number) => {
         try {
@@ -288,36 +244,14 @@ const LeaseTable: React.FC = () => {
 
     const { styles } = useStyle()
 
-    const [filterStatus, setFilterStatus] = useState<string | null>(null)
-
-    // 筛选处理函数
-    const handleStatusFilter = (status: string | null) => {
-        setFilterStatus((prevStatus) => (prevStatus === status ? null : status))
+    // 修改状态筛选逻辑
+    const handleStatusFilter = () => {
+        const newStatus = searchParams.status === "已支付" ? "" : "已支付"
+        setSearchParams((prev) => ({
+            ...prev,
+            status: newStatus,
+        }))
     }
-
-    // 计算筛选后的数据
-    const computedData = data.filter((item) => {
-        return !filterStatus || item.status === filterStatus
-    })
-
-    // 订单审核功能
-    const handleApprove = async (id: number) => {
-        try {
-            await updateLease(id, { status: "已审核" })
-            message.success("订单已审核")
-            fetchLeases()
-        } catch {
-            message.error("审核失败，请重试")
-        }
-    }
-
-    // // 修改后的数据过滤逻辑（示例）
-    // const filteredData = rawData.filter((item) => {
-    //     return (
-    //         // 其他过滤条件...
-    //         !filterStatus || item.status === filterStatus
-    //     )
-    // })
 
     return (
         <div>
@@ -332,7 +266,7 @@ const LeaseTable: React.FC = () => {
                         <Text>发件人姓名：</Text>
                         <Search
                             placeholder="输入发件人姓名"
-                            onSearch={onSearchSenderName}
+                            onSearch={(v) => handleSearch("senderName", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -342,7 +276,7 @@ const LeaseTable: React.FC = () => {
                         <Text>发件人电话：</Text>
                         <Search
                             placeholder="输入发件人电话"
-                            onSearch={onSearchSenderPhone}
+                            onSearch={(v) => handleSearch("senderPhone", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -352,7 +286,7 @@ const LeaseTable: React.FC = () => {
                         <Text>发件人地址：</Text>
                         <Search
                             placeholder="输入发件人地址"
-                            onSearch={onSearchSenderAddress}
+                            onSearch={(v) => handleSearch("senderAddress", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -369,7 +303,7 @@ const LeaseTable: React.FC = () => {
                         <Text>收件人姓名：</Text>
                         <Search
                             placeholder="输入收件人姓名"
-                            onSearch={onSearchReceiverName}
+                            onSearch={(v) => handleSearch("receiverName", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -379,7 +313,7 @@ const LeaseTable: React.FC = () => {
                         <Text>收件人电话：</Text>
                         <Search
                             placeholder="输入收件人电话"
-                            onSearch={onSearchReceiverPhone}
+                            onSearch={(v) => handleSearch("receiverPhone", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -389,7 +323,7 @@ const LeaseTable: React.FC = () => {
                         <Text>收件人地址：</Text>
                         <Search
                             placeholder="输入收件人地址"
-                            onSearch={onSearchReceiverAddress}
+                            onSearch={(v) => handleSearch("receiverAddress", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -406,7 +340,7 @@ const LeaseTable: React.FC = () => {
                         <Button
                             type="primary"
                             ghost
-                            onClick={() => handleStatusFilter("已支付")}
+                            onClick={() => handleStatusFilter()}
                             style={{
                                 backgroundColor: "#fff",
                                 borderColor: "volcano",
@@ -422,7 +356,7 @@ const LeaseTable: React.FC = () => {
                         <Text>订单&nbsp;&nbsp;&nbsp;&nbsp;编号：</Text>
                         <Search
                             placeholder="输入订单编号"
-                            onSearch={onSearchId}
+                            onSearch={(v) => handleSearch("orderNumber", v)}
                             style={{ width: 250 }}
                         />
                     </Space>
@@ -432,7 +366,7 @@ const LeaseTable: React.FC = () => {
                         <Text>订单&nbsp;&nbsp;&nbsp;&nbsp;状态：</Text>
                         <Select
                             placeholder="全部状态"
-                            onChange={onSearchStatus}
+                            onChange={(v) => handleSearch("status", v)}
                             style={{ width: 250 }}
                             allowClear
                         >
