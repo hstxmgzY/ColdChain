@@ -18,7 +18,12 @@ import type { TableProps } from "antd"
 import { UserType } from "../../interface/user/user"
 import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons"
 import "../../mock/userMock"
-import { getUserList, deleteUser, updateUser,addUser } from "../../api/modules/user"
+import {
+    getUserList,
+    deleteUser,
+    updateUser,
+    addUser,
+} from "../../api/modules/user"
 
 const { Search } = Input
 const { Text } = Typography
@@ -56,7 +61,7 @@ const UserTable: React.FC = () => {
             const response = await getUserList()
             setData(response)
             setFilteredData(response)
-        } catch (error) {
+        } catch {
             message.error("获取用户列表失败")
         } finally {
             setLoading(false)
@@ -80,13 +85,15 @@ const UserTable: React.FC = () => {
     const handleDelete = async (user_id: number) => {
         console.log("即将删除用户 ID:", user_id)
         try {
-            const response = await deleteUser(user_id) 
+            const response = await deleteUser(user_id)
             console.log("删除用户返回数据：", response)
-    
+
             if (!response || response.code !== 200) {
-                throw new Error(`删除用户失败，返回数据：${JSON.stringify(response)}`)
+                throw new Error(
+                    `删除用户失败，返回数据：${JSON.stringify(response)}`
+                )
             }
-    
+
             message.success("用户已删除")
             fetchUsers()
         } catch (error) {
@@ -94,8 +101,6 @@ const UserTable: React.FC = () => {
             message.error("删除失败，请重试")
         }
     }
-    
-    
 
     // 处理编辑用户
     const handleEdit = (user: UserType) => {
@@ -134,12 +139,12 @@ const UserTable: React.FC = () => {
             } else {
                 await addUser(values)
                 message.success("用户已添加")
-                fetchUsers();
+                fetchUsers()
             }
 
             setModalVisible(false)
             message.success(editingUser ? "用户信息已更新" : "用户已添加")
-        } catch (error) {
+        } catch {
             message.error("操作失败，请重试")
         }
     }
@@ -249,6 +254,7 @@ const UserTable: React.FC = () => {
                 </Col>
             </Row>
             <Table<UserType>
+                loading={loading}
                 size="middle"
                 rowKey="user_id"
                 columns={columns}

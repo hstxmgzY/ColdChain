@@ -34,7 +34,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data
-        return res.data
+        return res
     },
     (error: AxiosError) => {
         const status = error.response?.status
@@ -62,7 +62,7 @@ service.interceptors.response.use(
             errMessage = "网络连接失败"
         }
 
-        // message.error(errMessage)
+        message.error(errMessage)
         return Promise.reject(error)
     }
 )

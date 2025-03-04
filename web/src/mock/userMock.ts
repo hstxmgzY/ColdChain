@@ -2,7 +2,7 @@ import Mock from "mockjs"
 import { UserType } from "../interface/user/user"
 
 // 模拟用户数据
-const userList = Mock.mock({
+const userList:UserType[] = Mock.mock({
     "users|10-20": [
         {
             "user_id|+1": 1,
@@ -34,7 +34,7 @@ Mock.mock(/\/api\/user\/add/, "post", (options) => {
         phone,
     }
     userList.push(newUser)
-    return {
+    return { 
         code: 200,
         message: "用户添加成功",
         data: newUser,

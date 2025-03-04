@@ -1,17 +1,19 @@
+import { LeaseType } from "../../../interface/order/lease"
 import { http } from "../../request"
 
-export const getLeaseList = () => {
-    return http.get('/order/lease/list')
+export const getLeaseList = async (): Promise<LeaseType[]> => {
+    const response = await http.get<LeaseType[]>('/order/lease/list')
+    return response.data
 }
 
-export const addLease = (userData: { username: string; password: string; role: string; phone: string }) => {
-    return http.post('/order/lease/add',userData)
+export const addLease = (leaseData:LeaseType) => {
+    return http.post('/order/lease/add',leaseData)
 }
 
-export const updateLease = (userId: number, updatedData: { username?: string; password?: string; role?: string; phone?: string }) => {
-    return http.put(`/order/lease/update/${userId}`, updatedData)
+export const updateLease = (leaseId: number, updatedData: LeaseType) => {
+    return http.put(`/order/lease/update/${leaseId}`, updatedData)
 }
 
-export const deleteLease = async (userId: number) => {
-    return http.delete(`/order/lease/delete/${userId}`)
+export const deleteLease = async (leaseId: number) => {
+    return http.delete(`/order/lease/delete/${leaseId}`)
 }
