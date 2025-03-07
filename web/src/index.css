@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 html,
 body,
 div,
@@ -88,7 +90,17 @@ video {
 }
 
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
     display: block;
 }
 
@@ -96,20 +108,26 @@ body {
     line-height: 1;
 }
 
-ol, ul {
+ol,
+ul {
     list-style: none;
 }
 
-blockquote, q {
+blockquote,
+q {
     quotes: none;
 }
 
-blockquote:before, blockquote:after, q:before, q:after {
-    content: '';
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: "";
     content: none;
 }
 
-a, a:hover {
+a,
+a:hover {
     text-decoration: none;
     color: inherit;
 }
@@ -119,28 +137,30 @@ table {
     border-spacing: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     background-color: #f5f5f5;
-    font-family: 'PingFang SC-Light', 'PingFang SC', 'STHeitiSC-Light', 'Helvetica-Light', 'Arial', sans-serif;
+    font-family:
+        "PingFang SC-Light", "PingFang SC", "STHeitiSC-Light",
+        "Helvetica-Light", "Arial", sans-serif;
 }
 
-
-.fl{
+.fl {
     float: left;
 }
 
-.fr{
+.fr {
     float: right;
 }
 
-.clearfix{
-    zoom:1;
-    &::after{
+.clearfix {
+    zoom: 1;
+    &::after {
         display: block;
-        clear:both;
-        content: '';
-        visibility:hidden;
+        clear: both;
+        content: "";
+        visibility: hidden;
         height: 0;
     }
 }
@@ -169,5 +189,3 @@ html, body {
     width: 60%;
     height: 70%;
 }
-
-

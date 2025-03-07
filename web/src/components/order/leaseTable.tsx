@@ -244,14 +244,14 @@ const LeaseTable: React.FC = () => {
 
     const { styles } = useStyle()
 
-    // 修改状态筛选逻辑
-    const handleStatusFilter = () => {
-        const newStatus = searchParams.status === "已支付" ? "" : "已支付"
-        setSearchParams((prev) => ({
-            ...prev,
-            status: newStatus,
-        }))
-    }
+    // // 修改状态筛选逻辑
+    // const handleStatusFilter = () => {
+    //     const newStatus = searchParams.status === "已支付" ? "" : "已支付"
+    //     setSearchParams((prev) => ({
+    //         ...prev,
+    //         status: newStatus,
+    //     }))
+    // }
 
     return (
         <div>
@@ -337,7 +337,7 @@ const LeaseTable: React.FC = () => {
             >
                 <Col span={8}>
                     <Space>
-                        <Button
+                        {/* <Button
                             type="primary"
                             ghost
                             onClick={() => handleStatusFilter()}
@@ -348,7 +348,7 @@ const LeaseTable: React.FC = () => {
                             }}
                         >
                             待审核（已支付订单）
-                        </Button>
+                        </Button> */}
                     </Space>
                 </Col>
                 <Col span={8}>

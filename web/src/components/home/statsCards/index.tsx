@@ -3,6 +3,8 @@ import { ReconciliationTwoTone, RedEnvelopeTwoTone, ProjectTwoTone } from '@ant-
 import { Col, Row } from 'antd';
 import StatsCard from './statsCard';
 
+// 或许可以改用Statistic-统计数值：https://ant-design.antgroup.com/components/statistic-cn
+
 const statsData = [
     {
         title: '今日使用冷链箱数量',

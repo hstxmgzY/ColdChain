@@ -6,6 +6,7 @@ import { Provider } from "react-redux"
 import store from "./store/index.tsx"
 import "./mock/userMock.ts"
 import "./mock/leaseMock.ts"
+import "./mock/reviewMock.ts"
 
 createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

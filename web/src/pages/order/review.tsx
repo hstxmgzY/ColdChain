@@ -1,11 +1,12 @@
-import React from "react";
+import React from "react"
+import ReviewTable from "../../components/order/reviewTable"
 
 const Review = () => {
     return (
-        <div>
-            <h1>Review Page</h1>
-        </div>
+        <>
+            <ReviewTable />
+        </>
     )
 }
 
-export default Review;
+export default Review

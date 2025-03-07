@@ -51,6 +51,13 @@ export default [
         url: "/order/index",
         children: [
             {
+                path: "/order/review",
+                name: "review",
+                label: "订单审核",
+                icon: "AuditOutlined",
+                url: "/order/review",
+            },
+            {
                 path: "/order/lease",
                 name: "lease",
                 label: "租赁订单管理",
@@ -64,13 +71,7 @@ export default [
                 icon: "VideoCameraOutlined",
                 url: "/order/monitor",
             },
-            // {
-            //     path: '/order/review',
-            //     name: 'review',
-            //     label: '订单审核',
-            //     icon: 'AuditOutlined',
-            //     url: '/order/review',
-            // },
+
             {
                 path: "/order/tracking",
                 name: "tracking",
@@ -101,20 +102,20 @@ export default [
                 icon: "ToolOutlined",
                 url: "/resource/equipment",
             },
-            {
-                path: "/resource/product",
-                name: "product",
-                label: "产品信息管理",
-                icon: "ContainerOutlined",
-                url: "/resource/product",
-            },
-            {
-                path: "/resource/product-trans",
-                name: "productTrans",
-                label: "产品运输管理",
-                icon: "ForkOutlined",
-                url: "/resource/productTrans",
-            },
+            // {
+            //     path: "/resource/product",
+            //     name: "product",
+            //     label: "产品信息管理",
+            //     icon: "ContainerOutlined",
+            //     url: "/resource/product",
+            // },
+            // {
+            //     path: "/resource/product-trans",
+            //     name: "productTrans",
+            //     label: "产品运输管理",
+            //     icon: "ForkOutlined",
+            //     url: "/resource/productTrans",
+            // },
             {
                 path: "/resource/vehicle",
                 name: "vehicle",
