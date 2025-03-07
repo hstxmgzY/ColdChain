@@ -9,9 +9,8 @@ import {
     Input,
     message,
     Alert,
-    Popconfirm,
 } from "antd"
-import type { TableProps, PopconfirmProps } from "antd"
+import type { TableProps } from "antd"
 import {
     getAuditList,
     approveOrder,
@@ -20,6 +19,7 @@ import {
 import { ReviewOrderType } from "../../interface/order/review"
 import { createStyles } from "antd-style"
 import { ColdModuleType } from "../../interface/resource/coldModule.ts"
+import LeaseDetailTable from "./leaseDetailTable.tsx"
 
 const useStyle = createStyles(({ css }) => ({
     urgentTag: css`
@@ -44,94 +44,9 @@ const ReviewTable: React.FC = () => {
     const [modalType, setModalType] = useState<"approve" | "reject">("approve")
     const { styles } = useStyle()
 
-    const confirm: PopconfirmProps["onConfirm"] = (e) => {
-        console.log(e)
-        message.success("Click on Yes")
-    }
-
-    const cancel: PopconfirmProps["onCancel"] = (e) => {
-        console.log(e)
-        message.error("Click on No")
-    }
-
-    const expandedRowRender = (record: ReviewOrderType) => {
-        const columns = [
-            {
-                title: "拟分配冷链模块编号",
-                dataIndex: "id",
-                key: "id",
-            },
-            {
-                title: "冷链模块开关",
-                render: (_: unknown, record: ColdModuleType) => (
-                    <Popconfirm
-                        title="关闭冷链模块"
-                        description="你确定要关闭这个冷链模块吗?"
-                        onConfirm={confirm}
-                        onCancel={cancel}
-                        okText="确定"
-                        cancelText="取消"
-                    >
-                        <Tag
-                            color={record.isEnabled ? "green" : "red"}
-                            className="cursor-pointer"
-                            onClick={() => {}}
-                        >
-                            {record.isEnabled ? "开启" : "关闭"}
-                        </Tag>
-                    </Popconfirm>
-                ),
-                key: "isEnabled",
-            },
-            {
-                title: "产品名称",
-                dataIndex: ["product", "productName"],
-                key: "productName",
-            },
-            {
-                title: "产品类别",
-                render: (_: unknown, record: ColdModuleType) => (
-                    <Tag color="#87d068">{record.product?.category}</Tag>
-                ),
-                key: "category",
-            },
-            {
-                title: "产品重量(kg)",
-                dataIndex: ["product", "weight"],
-                key: "weight",
-            },
-            {
-                title: "产品体积(m³)",
-                dataIndex: ["product", "volume"],
-                key: "volume",
-            },
-            {
-                title: "温度范围 (°C)",
-                render: (_: unknown, record: ColdModuleType) =>
-                    `${record.minTemperature} ~ ${record.maxTemperature}`,
-                key: "temperatureRange",
-            },
-            {
-                title: "状态",
-                render: (_: unknown, record: ColdModuleType) =>
-                    record.status === "待分配" ? (
-                        <Tag color="blue">待分配</Tag>
-                    ) : (
-                        <Tag color="green">已分配</Tag>
-                    ),
-                dataIndex: "status",
-                key: "status",
-            },
-        ]
-
-        return (
-            <Table
-                columns={columns}
-                dataSource={record.coldModules}
-                rowKey="id"
-                pagination={false}
-            />
-        )
+    // 减少 columns 内部的重复计算
+    const getUniqueCategories = (modules: ColdModuleType[]) => {
+        return [...new Set(modules.map((module) => module.product?.category))]
     }
 
     // 列定义 - 聚焦审核关键信息
@@ -169,12 +84,8 @@ const ReviewTable: React.FC = () => {
             dataIndex: "coldModules",
             render: (modules: ColdModuleType[]) => (
                 <div className="flex flex-wrap gap-1">
-                    {[
-                        ...new Set(
-                            modules.map((module) => module.product?.category)
-                        ),
-                    ].map((category, index) => (
-                        <Tag key={index} color="#87d068">
+                    {getUniqueCategories(modules).map((category, index) => (
+                        <Tag color="#87d068" key={index}>
                             {category}
                         </Tag>
                     ))}
@@ -214,6 +125,8 @@ const ReviewTable: React.FC = () => {
         }
     }
 
+    // 注意注意要改这个useEffect，他现在只会在挂载时执行
+
     useEffect(() => {
         loadAuditOrders() // 仅加载 `pending` 状态订单
     }, [])
@@ -221,16 +134,13 @@ const ReviewTable: React.FC = () => {
     // 处理审核操作
     const handleAudit = async () => {
         if (!selectedOrder) return
-
         try {
             if (modalType === "approve") {
                 await approveOrder(selectedOrder.order_number)
                 message.success("订单已通过，正在分配资源...")
             } else {
-                if (!rejectReason.trim()) {
-                    message.warning("请输入驳回原因")
-                    return
-                }
+                if (!rejectReason.trim())
+                    return message.warning("请输入驳回原因")
                 await rejectOrder(selectedOrder.order_number, rejectReason)
                 message.warning("订单已驳回")
             }
@@ -265,7 +175,9 @@ const ReviewTable: React.FC = () => {
             <Table
                 columns={columns}
                 expandable={{
-                    expandedRowRender,
+                    expandedRowRender: (record) => (
+                        <LeaseDetailTable record={record} />
+                    ),
                     rowExpandable: (record) => record.coldModules?.length > 0,
                 }}
                 dataSource={orders}
@@ -305,20 +217,20 @@ const ReviewTable: React.FC = () => {
                                             {selectedOrder.companyName}
                                         </div>
                                         {/* <div className="mt-2">
-                                            <span className="mr-2">
-                                                营业执照：
-                                            </span>
-                                            <Image
-                                                width={120}
-                                                src={selectedOrder.licenseUrl}
-                                                className={
-                                                    styles.licensePreview
-                                                }
-                                                preview={{
-                                                    src: selectedOrder.licenseUrl,
-                                                }}
-                                            />
-                                        </div> */}
+                                                        <span className="mr-2">
+                                                            营业执照：
+                                                        </span>
+                                                        <Image
+                                                            width={120}
+                                                            src={selectedOrder.licenseUrl}
+                                                            className={
+                                                                styles.licensePreview
+                                                            }
+                                                            preview={{
+                                                                src: selectedOrder.licenseUrl,
+                                                            }}
+                                                        />
+                                                    </div> */}
                                     </>
                                 ) : (
                                     `个人用户（${selectedOrder.userName}）`
@@ -332,14 +244,14 @@ const ReviewTable: React.FC = () => {
                                 {selectedOrder.route.join(" → ")}
                             </Descriptions.Item>
                             {/* <Descriptions.Item label="温控要求">
-                                <Tag color="#87d068">
-                                    {selectedOrder.temperatureRange}
-                                </Tag>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="产品类型" span={3}>
-                                {selectedOrder.}（
-                                {selectedOrder.productWeight}kg）
-                            </Descriptions.Item> */}
+                                            <Tag color="#87d068">
+                                                {selectedOrder.temperatureRange}
+                                            </Tag>
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="产品类型" span={3}>
+                                            {selectedOrder.}（
+                                            {selectedOrder.productWeight}kg）
+                                        </Descriptions.Item> */}
                         </Descriptions>
 
                         {/* 驳回原因输入 */}
