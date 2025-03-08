@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react"
-import {
-    Table,
-    Button,
-    Tag,
-    Modal,
-    Descriptions,
-    Form,
-    Input,
-    message,
-    Alert,
-} from "antd"
+import { Table, Button, Tag, message, Alert } from "antd"
 import type { TableProps } from "antd"
 import {
     getAuditList,
@@ -20,6 +10,7 @@ import { ReviewOrderType } from "../../interface/order/review"
 import { createStyles } from "antd-style"
 import { ColdModuleType } from "../../interface/resource/coldModule.ts"
 import LeaseDetailTable from "./leaseDetailTable.tsx"
+import ReviewModal from "./reviewModal.tsx"
 
 const useStyle = createStyles(({ css }) => ({
     urgentTag: css`
@@ -43,6 +34,28 @@ const ReviewTable: React.FC = () => {
     const [rejectReason, setRejectReason] = useState("")
     const [modalType, setModalType] = useState<"approve" | "reject">("approve")
     const { styles } = useStyle()
+
+    const handleSubmitAudit = async () => {
+        if (!selectedOrder) return
+        try {
+            if (modalType === "approve") {
+                await approveOrder(selectedOrder.order_number)
+                message.success("订单已通过，正在分配资源...")
+            } else {
+                if (!rejectReason.trim()) {
+                    message.warning("请输入驳回原因")
+                    return
+                }
+                await rejectOrder(selectedOrder.order_number, rejectReason)
+                message.warning("订单已驳回")
+            }
+            loadAuditOrders() // 刷新列表
+            setSelectedOrder(null) // 关闭弹窗
+            setRejectReason("") // 清空输入
+        } catch {
+            message.error("操作失败")
+        }
+    }
 
     // 减少 columns 内部的重复计算
     const getUniqueCategories = (modules: ColdModuleType[]) => {
@@ -131,26 +144,6 @@ const ReviewTable: React.FC = () => {
         loadAuditOrders() // 仅加载 `pending` 状态订单
     }, [])
 
-    // 处理审核操作
-    const handleAudit = async () => {
-        if (!selectedOrder) return
-        try {
-            if (modalType === "approve") {
-                await approveOrder(selectedOrder.order_number)
-                message.success("订单已通过，正在分配资源...")
-            } else {
-                if (!rejectReason.trim())
-                    return message.warning("请输入驳回原因")
-                await rejectOrder(selectedOrder.order_number, rejectReason)
-                message.warning("订单已驳回")
-            }
-            loadAuditOrders()
-            setSelectedOrder(null)
-        } catch {
-            message.error("操作失败")
-        }
-    }
-
     // 打开审核弹窗
     const handleOpenModal = (
         order: ReviewOrderType,
@@ -186,92 +179,15 @@ const ReviewTable: React.FC = () => {
             />
 
             {/* 审核弹窗 */}
-            <Modal
-                title={`订单审核 - ${selectedOrder?.order_number}`}
-                open={!!selectedOrder}
+            <ReviewModal
+                visible={!!selectedOrder}
+                order={selectedOrder}
+                type={modalType}
+                rejectReason={rejectReason}
                 onCancel={() => setSelectedOrder(null)}
-                footer={[
-                    <Button key="cancel" onClick={() => setSelectedOrder(null)}>
-                        关闭
-                    </Button>,
-                    <Button
-                        key="submit"
-                        type={modalType === "approve" ? "primary" : "default"}
-                        danger={modalType === "reject"}
-                        onClick={handleAudit}
-                    >
-                        {modalType === "approve" ? "确认通过" : "提交驳回"}
-                    </Button>,
-                ]}
-                width={800}
-            >
-                {selectedOrder && (
-                    <div className="space-y-4">
-                        {/* 用户资质区块 */}
-                        <Descriptions bordered size="small">
-                            <Descriptions.Item label="用户身份" span={3}>
-                                {selectedOrder.userType === "merchant" ? (
-                                    <>
-                                        <div>
-                                            企业名称：
-                                            {selectedOrder.companyName}
-                                        </div>
-                                        {/* <div className="mt-2">
-                                                        <span className="mr-2">
-                                                            营业执照：
-                                                        </span>
-                                                        <Image
-                                                            width={120}
-                                                            src={selectedOrder.licenseUrl}
-                                                            className={
-                                                                styles.licensePreview
-                                                            }
-                                                            preview={{
-                                                                src: selectedOrder.licenseUrl,
-                                                            }}
-                                                        />
-                                                    </div> */}
-                                    </>
-                                ) : (
-                                    `个人用户（${selectedOrder.userName}）`
-                                )}
-                            </Descriptions.Item>
-                        </Descriptions>
-
-                        {/* 订单详情区块 */}
-                        <Descriptions bordered>
-                            <Descriptions.Item label="配送路线" span={2}>
-                                {selectedOrder.route.join(" → ")}
-                            </Descriptions.Item>
-                            {/* <Descriptions.Item label="温控要求">
-                                            <Tag color="#87d068">
-                                                {selectedOrder.temperatureRange}
-                                            </Tag>
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="产品类型" span={3}>
-                                            {selectedOrder.}（
-                                            {selectedOrder.productWeight}kg）
-                                        </Descriptions.Item> */}
-                        </Descriptions>
-
-                        {/* 驳回原因输入 */}
-                        {modalType === "reject" && (
-                            <Form.Item label="驳回原因" required>
-                                <Input.TextArea
-                                    rows={3}
-                                    value={rejectReason}
-                                    onChange={(e) =>
-                                        setRejectReason(e.target.value)
-                                    }
-                                    placeholder="请输入详细驳回理由（至少15字）"
-                                    showCount
-                                    maxLength={200}
-                                />
-                            </Form.Item>
-                        )}
-                    </div>
-                )}
-            </Modal>
+                onReasonChange={setRejectReason}
+                onSubmit={handleSubmitAudit}
+            />
         </div>
     )
 }
