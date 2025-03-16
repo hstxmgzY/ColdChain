@@ -1,13 +1,12 @@
-import React from "react";
-import { Outlet } from "react-router-dom";
+import React from "react"
+import { Outlet } from "react-router-dom"
 
 const Resources = () => {
     return (
         <div>
-            <h1>Resources Page</h1>
-             <Outlet />
+            <Outlet />
         </div>
     )
 }
 
-export default Resources;
+export default Resources

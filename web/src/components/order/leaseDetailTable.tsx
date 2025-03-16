@@ -88,6 +88,7 @@ const LeaseDetailTable: React.FC<LeaseDetailTableProps> = ({ record }) => {
 
     return (
         <Table
+            size="small"
             columns={columns}
             dataSource={record.coldModules}
             rowKey="id"

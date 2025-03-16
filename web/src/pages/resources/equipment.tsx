@@ -1,11 +1,12 @@
-import React from "react";
+import React from "react"
+import ColdModuleManager from "../../components/resource/coldModule"
 
 const Equipment = () => {
     return (
         <div>
-            <h1>Equipment Page</h1>
+            <ColdModuleManager />
         </div>
     )
 }
 
-export default Equipment;
+export default Equipment

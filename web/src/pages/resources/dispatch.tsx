@@ -1,11 +1,12 @@
-import React from "react";
+import React from "react"
+import DetailInfo from "../../components/resource/coldModule/coldModuleDetail/DetailInfo"
 
 const Dispatch = () => {
     return (
         <div>
-            <h1>Dispatch Page</h1>
+            <DetailInfo />
         </div>
     )
 }
 
-export default Dispatch;
+export default Dispatch

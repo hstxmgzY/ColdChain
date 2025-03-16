@@ -1,11 +1,12 @@
-import React from "react";
+import React from "react"
+import VehicleDetailTable from "../../components/resource/vehicleDetailTable"
 
 const Vehicle = () => {
     return (
         <div>
-            <h1>Vehicle Page</h1>
+            <VehicleDetailTable />
         </div>
     )
 }
 
-export default Vehicle;
+export default Vehicle
