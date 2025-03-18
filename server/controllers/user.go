@@ -4,7 +4,6 @@ import (
 	"coldchain/models"
 	"fmt"
 	"strconv"
-
 	"github.com/gin-gonic/gin"
 )
 

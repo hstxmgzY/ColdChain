@@ -1,9 +1,10 @@
 import React from "react";
+import AlarmInfoTable from "../../components/screen/alarmInfo";
 
 const Alarm = () => {
     return (
         <div>
-            <h1>Alarm Page</h1>
+            <AlarmInfoTable />
         </div>
     )
 }

@@ -1,11 +1,12 @@
-import React from "react";
+import React from "react"
+import ColdModuleStats from "../../components/screen/equipmentStats"
 
 const EquipmentStats = () => {
     return (
         <div>
-            <h1>Equipment Stats Page</h1>
+            <ColdModuleStats />
         </div>
     )
 }
 
-export default EquipmentStats;
+export default EquipmentStats

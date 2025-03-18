@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import * as echarts from "echarts"
-import { Descriptions, Table, Tag, Tabs } from "antd"
-import type { DescriptionsProps, TableProps, TabsProps } from "antd"
+import { Descriptions, Table, Tag, Tabs, Button, Modal } from "antd"
+import type { DescriptionsProps, TableProps } from "antd"
 // import ReactECharts from "echarts-for-react"
 import { Splitter, Typography } from "antd"
 
@@ -213,6 +213,7 @@ const TemperatureChart = () => {
 
     return (
         <div style={{ padding: 16 }}>
+            <Typography.Title level={5}>设备预警记录</Typography.Title>
             <Tabs
                 activeKey={timeRange}
                 onChange={(key) => setTimeRange(key as any)}
@@ -221,7 +222,7 @@ const TemperatureChart = () => {
             <div
                 ref={chartRef}
                 style={{
-                    height: 400,
+                    height: 300,
                     width: "100%",
                 }}
             />
@@ -230,11 +231,11 @@ const TemperatureChart = () => {
 }
 
 // 主布局组件
-const DetailInfo: React.FC = () => (
+const DetailInfoSplitter: React.FC = () => (
     <Splitter
         lazy
         style={{
-            height: "80vh",
+            height: "100%",
             boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
             background: "#fff",
         }}
@@ -247,12 +248,42 @@ const DetailInfo: React.FC = () => (
                 <Splitter.Panel collapsible>
                     <FaultTable />
                 </Splitter.Panel>
-                <Splitter.Panel collapsible>
+                <Splitter.Panel collapsible defaultSize="60%">
                     <TemperatureChart />
                 </Splitter.Panel>
             </Splitter>
         </Splitter.Panel>
     </Splitter>
 )
+
+const DetailInfo: React.FC = () => {
+    const [DetailInfoVisible, setDetailInfoVisible] = useState(false)
+    return (
+        <>
+            <Button
+                type="link"
+                size="small"
+                onClick={() => setDetailInfoVisible(true)}
+            >
+                详情
+            </Button>
+
+            <Modal
+                title="设备温度调控"
+                open={DetailInfoVisible}
+                onOk={() => setDetailInfoVisible(false)}
+                onCancel={() => setDetailInfoVisible(false)}
+                width="90vw"
+                bodyStyle={{
+                    height: "80vh", // 控制内容区高度
+                    overflowY: "auto", // 添加滚动条
+                }}
+                style={{ top: 30, left: 80 }}
+            >
+                <DetailInfoSplitter />
+            </Modal>
+        </>
+    )
+}
 
 export default DetailInfo

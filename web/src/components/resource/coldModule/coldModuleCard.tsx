@@ -1,8 +1,9 @@
 import React from "react"
-import { Card, List, Tag, Typography, Button, Space, Divider} from "antd"
+import { Card, List, Tag, Typography, Button, Space, Divider } from "antd"
 import { ColdModuleType } from "../../../interface/resource/coldModule"
 import coldModuleImgUrl from "../../../assets/images/coldmodule.png"
 import MoreAction from "./coldModuleDetail/MoreAction"
+import DetailInfo from "./coldModuleDetail/DetailInfo"
 
 const { Text } = Typography
 
@@ -84,20 +85,7 @@ const ColdModuleCard: React.FC<ColdModuleCardProps> = ({ data }) => {
                             >
                                 设备轨迹
                             </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() => console.log("详情", item.id)}
-                            >
-                                详情
-                            </Button>
-                            {/* <Button
-                                type="link"
-                                size="small"
-                                onClick={() => console.log("更多", item.id)}
-                            >
-                                更多
-                            </Button> */}
+                            <DetailInfo />
                             <MoreAction />
                         </Space>
                     </Card>
