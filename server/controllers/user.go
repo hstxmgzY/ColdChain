@@ -1,79 +1,186 @@
 package controllers
 
 import (
+	"coldchain/dao"
+	"coldchain/dto"
 	"coldchain/models"
-	"fmt"
+	"encoding/json"
+	"net/http"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
-type UserController struct{}
+type UserController struct {
+	userRepo *dao.UserRepository
+}
 
-func (u UserController) GetUserInfo(c *gin.Context) {
-	idStr := c.Param("id")
-	name := c.Param("name")
+// 修改控制器构造函数
+func NewUserController(db *gorm.DB) *UserController {
+	return &UserController{
+		userRepo: dao.NewUserRepository(db),
+	}
+}
 
-	id, _ := strconv.Atoi(idStr)
+// 处理用户列表
+func (c *UserController) GetUsers(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
 
-	user, _ := models.GetUserById(id)
-	ReturnSuccess(c, 0,name,user, 1)
-} 
-
-func (u UserController) CreateUser(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-	role := c.PostForm("role")
-	phone := c.PostForm("phone")
-
-	id, err := models.CreateUser(username, password, role, phone)
+	users, err := c.userRepo.ListUsers(page, size)
 	if err != nil {
-		ReturnError(c, 4002, "保存错误")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ReturnSuccess(c, 0, "保存成功", id, 1)
+
+	var response []dto.UserResponse
+	for _, user := range users {
+		// 解析地址数据
+		var addresses []dto.Address
+		if err := json.Unmarshal(user.Address, &addresses); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
+			return
+		}
+
+		response = append(response, dto.UserResponse{
+			ID:       user.ID,
+			Username: user.Username,
+			Role:     user.Role.RoleName,
+			Phone:    user.Phone,
+			Address:  addresses, // 使用解析后的地址数组
+		})
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
-func (u UserController) UpdateUser(c *gin.Context) {
-	idStr := c.PostForm("user_id")
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-	phone := c.PostForm("phone")
-	role := c.PostForm("role")
-
-
-	id, _ := strconv.Atoi(idStr)
-
-	models.UpdateUser(id, username, password, role, phone)
-	ReturnSuccess(c, 0, "更新成功", true, 1)
-}
-
-func (u UserController) DeleteUser(c *gin.Context) {
-    idStr := c.PostForm("user_id")
-    if idStr == "" {
-        ReturnError(c, 4001, "user_id 不能为空")
-        return
-    }
-	id, err := strconv.Atoi(idStr)
-	fmt.Println("id:", id)
-    if err != nil || id <= 0 {      // 检查是否为有效正整数
-        ReturnError(c, 4002, "无效的用户ID")
-        return
-    }
-
-    err = models.DeleteUser(id)
-    if err != nil {
-        ReturnError(c, 5001, "删除失败: "+err.Error())
-        return
-    }
-    
-    ReturnSuccess(c, 0, "删除成功", true, 1)
-}
-
-func (u UserController) GetUserList(c *gin.Context) {
-	users, err := models.GetAllUser()
-	if err != nil {
-		ReturnError(c, 4004, "没有相关数据")
+// 处理用户创建
+func (c *UserController) CreateUser(ctx *gin.Context) {
+	var req dto.CreateUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ReturnSuccess(c, 0, "获取成功", users, 1)
+
+	// 序列化地址数据
+	addressJSON, err := json.Marshal(req.Address)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "地址格式错误"})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "密码加密失败"})
+		return
+	}
+
+	user := models.User{
+		Username:     req.Username,
+		Phone:        req.Phone,
+		PasswordHash: string(hashedPassword),
+		RoleID:       req.RoleID,
+		Address:      datatypes.JSON(addressJSON), // 使用正确的JSON类型
+	}
+
+	if err := c.userRepo.CreateUser(&user); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 构造响应数据
+	var addresses []dto.Address
+	if err := json.Unmarshal(user.Address, &addresses); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, dto.UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role.RoleName,
+		Phone:    user.Phone,
+		Address:  addresses,
+	})
+}
+
+// 处理用户更新
+func (c *UserController) UpdateUser(ctx *gin.Context) {
+	userID, _ := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	var req dto.UpdateUserRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := c.userRepo.GetUserWithRole(uint(userID))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	// 更新字段处理
+	if req.Username != nil {
+		user.Username = *req.Username
+	}
+	if req.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "密码加密失败"})
+			return
+		}
+		user.PasswordHash = string(hashed)
+	}
+	if req.RoleID != nil {
+		user.RoleID = *req.RoleID
+	}
+	if req.Address != nil {
+		addressJSON, err := json.Marshal(*req.Address)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "地址格式错误"})
+			return
+		}
+		user.Address = datatypes.JSON(addressJSON)
+	}
+
+	if err := c.userRepo.UpdateUser(user); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 解析地址用于响应
+	var addresses []dto.Address
+	if err := json.Unmarshal(user.Address, &addresses); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role.RoleName,
+		Phone:    user.Phone,
+		Address:  addresses,
+	})
+}
+
+// 删除用户
+func (c *UserController) DeleteUser(ctx *gin.Context) {
+	userID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		return
+	}
+
+	// 调用 `dao` 层删除用户
+	if err := c.userRepo.DeleteUser(uint(userID)); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "删除用户失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "用户删除成功"})
 }

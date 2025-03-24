@@ -151,45 +151,45 @@ const UserTable: React.FC = () => {
 
     const columns: TableProps<UserType>["columns"] = [
         { title: "用户名", dataIndex: "username", key: "username" },
-        {
-            title: "用户密码",
-            dataIndex: "password",
-            key: "password",
-            width: 250,
-            render: (_, record) => {
-                const isVisible = visiblePasswords[record.user_id] // 获取当前行的密码状态
-                return (
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-around",
-                        }}
-                    >
-                        <span style={{ marginRight: 8 }}>
-                            {isVisible ? record.password : "**************"}
-                        </span>
-                        <Tooltip title={isVisible ? "隐藏密码" : "显示密码"}>
-                            {isVisible ? (
-                                <EyeInvisibleOutlined
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        togglePassword(record.user_id)
-                                    }
-                                />
-                            ) : (
-                                <EyeOutlined
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        togglePassword(record.user_id)
-                                    }
-                                />
-                            )}
-                        </Tooltip>
-                    </div>
-                )
-            },
-        },
+        // {
+        //     title: "用户密码",
+        //     dataIndex: "password",
+        //     key: "password",
+        //     width: 250,
+        //     render: (_, record) => {
+        //         const isVisible = visiblePasswords[record.user_id] // 获取当前行的密码状态
+        //         return (
+        //             <div
+        //                 style={{
+        //                     display: "flex",
+        //                     alignItems: "center",
+        //                     justifyContent: "space-around",
+        //                 }}
+        //             >
+        //                 <span style={{ marginRight: 8 }}>
+        //                     {isVisible ? record.password : "**************"}
+        //                 </span>
+        //                 <Tooltip title={isVisible ? "隐藏密码" : "显示密码"}>
+        //                     {isVisible ? (
+        //                         <EyeInvisibleOutlined
+        //                             style={{ cursor: "pointer" }}
+        //                             onClick={() =>
+        //                                 togglePassword(record.user_id)
+        //                             }
+        //                         />
+        //                     ) : (
+        //                         <EyeOutlined
+        //                             style={{ cursor: "pointer" }}
+        //                             onClick={() =>
+        //                                 togglePassword(record.user_id)
+        //                             }
+        //                         />
+        //                     )}
+        //                 </Tooltip>
+        //             </div>
+        //         )
+        //     },
+        // },
         {
             title: "用户权限",
             dataIndex: "role",
@@ -198,17 +198,20 @@ const UserTable: React.FC = () => {
                 const roleColors: Record<string, string> = {
                     admin: "volcano",
                     manager: "green",
-                    user: "blue",
+                    individual: "blue",
+                    merchant: "purple",
                 }
                 const roleMap: Record<string, string> = {
                     admin: "系统管理员",
                     manager: "冷链运输管理员",
-                    user: "普通用户",
+                    individual: "个人用户",
+                    merchant: "商户用户",
                 }
                 return <Tag color={roleColors[role]}>{roleMap[role]}</Tag>
             },
         },
         { title: "电话号码", dataIndex: "phone", key: "phone" },
+        { title: "地址", dataIndex: "address", key: "address" },
         {
             title: "操作",
             key: "action",
@@ -318,7 +321,8 @@ const UserTable: React.FC = () => {
                             <Select.Option value="manager">
                                 冷链运输管理员
                             </Select.Option>
-                            <Select.Option value="user">普通用户</Select.Option>
+                            <Select.Option value="individual">个人用户</Select.Option>
+                            <Select.Option value="merchant">商户用户</Select.Option>
                         </Select>
                     </Form.Item>
 

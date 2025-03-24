@@ -2,6 +2,7 @@ package router
 
 import (
 	"coldchain/controllers"
+	"coldchain/dao" 
 	"coldchain/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -9,17 +10,22 @@ import (
 func Router() *gin.Engine {
 	r := gin.Default()
 
+	// 中间件配置
 	r.Use(gin.LoggerWithConfig(logger.LoggerToFile()))
 	r.Use(logger.Recover)
+	
 
-	user := r.Group("/user")
+	// 初始化控制器
+	userCtrl := controllers.NewUserController(dao.Db)
+
+	// 用户路由组
+	userGroup := r.Group("/users")
 	{
-		user.GET("/info/:id", controllers.UserController{}.GetUserInfo)
-		user.GET("/all", controllers.UserController{}.GetUserList)
-		user.POST("/list", controllers.UserController{}.GetUserList)
-		user.POST("/add", controllers.UserController{}.CreateUser)
-		user.PUT("/update", controllers.UserController{}.UpdateUser)
-		user.DELETE("/delete", controllers.UserController{}.DeleteUser)
+		userGroup.GET("", userCtrl.GetUsers)
+		userGroup.POST("", userCtrl.CreateUser)
+		userGroup.PUT("/:id", userCtrl.UpdateUser)
+		userGroup.DELETE("/:id", userCtrl.DeleteUser)
 	}
+
 	return r
 }

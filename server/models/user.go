@@ -1,47 +1,23 @@
 package models
-
 import (
-    "fmt"
-    "coldchain/dao"
+	"gorm.io/datatypes"
+	"time"
 )
 
+type UserRole struct {
+	ID 	 uint   `gorm:"primaryKey" json:"id"`
+	RoleName string `gorm:"type:varchar(50);not null" json:"role_name"`
+}
+
 type User struct {
-    Id       int    `gorm:"column:user_id;primaryKey;autoIncrement"`
-    Username string `gorm:"column:username;size:50;not null"`
-    Password string `gorm:"column:password;size:255"`
-    Role     string `gorm:"column:role;type:enum('admin','manager');not null"`
-    Phone    string `gorm:"column:phone;size:15;unique;not null"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Username  string    `gorm:"type:varchar(50);not null" json:"username"`
+	Phone	 string    `gorm:"type:varchar(50);unique" json:"phone"`
+	PasswordHash  string   `gorm:"type:CHAR(60);not null" json:"password_hash"`
+	RoleID   uint      `gorm:"not null" json:"role_id"`
+	Role    UserRole  `gorm:"foreignKey:RoleID;references:ID"`
+	Address datatypes.JSON `gorm:"type:json" json:"address"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
-func (User) TableName() string {
-    return "user"
-}
-
-func GetUserById(id int) (user User, err error) {
-	err = dao.Db.Where(&User{Id: id}).First(&user).Error
-    return user, err
-}
-
-func GetAllUser() (users []User, err error) {
-	err = dao.Db.Find(&users).Error
-    return users, err
-}
-
-func CreateUser(username string, password string, role string, phone string) (int, error) {
-    user := User{Username: username, Password: password, Role: role, Phone: phone}
-    result := dao.Db.Create(&user)
-    if result.Error != nil {
-        return 0, result.Error
-    }
-    return user.Id, nil
-}
-
-func UpdateUser(id int, username string, password string, role string, phone string){
-    dao.Db.Model(&User{}).Where("user_id = ?", id).Update("username", username, "password", password, "role", role, "phone", phone)
-}
-
-func DeleteUser(id int) error {
-	fmt.Println("id", id)
-	err := dao.Db.Where("user_id = ?", id).Delete(&User{}).Error
-    return err
-}

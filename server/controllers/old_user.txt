@@ -1,0 +1,79 @@
+// package controllers
+
+// import (
+// 	"coldchain/models"
+// 	"fmt"
+// 	"strconv"
+// 	"github.com/gin-gonic/gin"
+// )
+
+// type UserController struct{}
+
+// func (u UserController) GetUserInfo(c *gin.Context) {
+// 	idStr := c.Param("id")
+// 	name := c.Param("name")
+
+// 	id, _ := strconv.Atoi(idStr)
+
+// 	user, _ := models.GetUserById(id)
+// 	ReturnSuccess(c, 0,name,user, 1)
+// } 
+
+// func (u UserController) CreateUser(c *gin.Context) {
+// 	username := c.PostForm("username")
+// 	password := c.PostForm("password")
+// 	role := c.PostForm("role")
+// 	phone := c.PostForm("phone")
+
+// 	id, err := models.CreateUser(username, password, role, phone)
+// 	if err != nil {
+// 		ReturnError(c, 4002, "保存错误")
+// 		return
+// 	}
+// 	ReturnSuccess(c, 0, "保存成功", id, 1)
+// }
+
+// func (u UserController) UpdateUser(c *gin.Context) {
+// 	idStr := c.PostForm("user_id")
+// 	username := c.PostForm("username")
+// 	password := c.PostForm("password")
+// 	phone := c.PostForm("phone")
+// 	role := c.PostForm("role")
+
+
+// 	id, _ := strconv.Atoi(idStr)
+
+// 	models.UpdateUser(id, username, password, role, phone)
+// 	ReturnSuccess(c, 0, "更新成功", true, 1)
+// }
+
+// func (u UserController) DeleteUser(c *gin.Context) {
+//     idStr := c.PostForm("user_id")
+//     if idStr == "" {
+//         ReturnError(c, 4001, "user_id 不能为空")
+//         return
+//     }
+// 	id, err := strconv.Atoi(idStr)
+// 	fmt.Println("id:", id)
+//     if err != nil || id <= 0 {      // 检查是否为有效正整数
+//         ReturnError(c, 4002, "无效的用户ID")
+//         return
+//     }
+
+//     err = models.DeleteUser(id)
+//     if err != nil {
+//         ReturnError(c, 5001, "删除失败: "+err.Error())
+//         return
+//     }
+    
+//     ReturnSuccess(c, 0, "删除成功", true, 1)
+// }
+
+// func (u UserController) GetUserList(c *gin.Context) {
+// 	users, err := models.GetAllUser()
+// 	if err != nil {
+// 		ReturnError(c, 4004, "没有相关数据")
+// 		return
+// 	}
+// 	ReturnSuccess(c, 0, "获取成功", users, 1)
+// }

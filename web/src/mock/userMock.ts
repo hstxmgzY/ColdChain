@@ -7,9 +7,10 @@ const userList:UserType[] = Mock.mock({
         {
             "user_id|+1": 1,
             username: "@first",
-            password: "@string(10)",
-            "role|1": ["admin", "manager", "user"],
+            // password: "@string(10)",
+            "role|1": ["admin", "manager", "individual", "merchant"],
             phone: /1[3-9]\d{9}/,
+            address: "@county(true)",
         },
     ],
 }).users

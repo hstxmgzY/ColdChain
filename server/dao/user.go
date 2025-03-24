@@ -1,0 +1,123 @@
+package dao
+
+import (
+	"coldchain/pkg/config"
+	"coldchain/pkg/logger"
+	"errors"
+	"time"
+
+	"coldchain/models"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+var (
+	Db  *gorm.DB
+	err error
+)
+
+type UserRepository struct {
+	db *gorm.DB
+}
+
+func init() {
+	Db, err = gorm.Open(mysql.Open(config.DB_USERNAME+":"+config.DB_PASSWORD+"@tcp("+config.DB_HOST+":"+config.DB_PORT+")/"+config.DB_DATABASE+"?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+	if err != nil {
+		logger.Error(map[string]interface{}{"mysql connect error": err.Error()})
+		panic("数据库连接失败")
+	}
+
+	sqlDB, err := Db.DB()
+	if err != nil {
+		logger.Error(map[string]interface{}{"db error": err.Error()})
+		panic("数据库连接失败")
+	}
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+}
+
+// 修改仓库构造函数
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{db: db} // 传递外部 db 实例
+}
+
+// 获取带角色的用户
+func (r *UserRepository) GetUserWithRole(userID uint) (*models.User, error) {
+	var user models.User
+	if err := r.db.Preload("Role").First(&user, userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) { // GORM v2 使用 errors.Is()
+			return nil, errors.New("用户不存在")
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+// 创建用户
+func (r *UserRepository) CreateUser(user *models.User) error {
+	if err := r.db.Create(user).Error; err != nil {
+		logger.Error(map[string]interface{}{
+			"error":  err.Error(),
+			"method": "CreateUser",
+			"params": user,
+		})
+		return handleDBError(err)
+	}
+	return nil
+}
+
+// 更新用户
+func (r *UserRepository) UpdateUser(user *models.User) error {
+	if err := r.db.Save(user).Error; err != nil {
+		logger.Error(map[string]interface{}{
+			"error":  err.Error(),
+			"method": "UpdateUser",
+			"params": user,
+		})
+		return handleDBError(err)
+	}
+	return nil
+}
+
+// 删除用户
+func (r *UserRepository) DeleteUser(userID uint) error {
+	if err := r.db.Delete(&models.User{}, userID).Error; err != nil {
+		logger.Error(map[string]interface{}{
+			"error":  err.Error(),
+			"method": "DeleteUser",
+			"userID": userID,
+		})
+		return handleDBError(err)
+	}
+	return nil
+}
+
+// 用户列表
+func (r *UserRepository) ListUsers(page, size int) ([]models.User, error) {
+	var users []models.User
+	err := r.db.Preload("Role").
+		Offset((page - 1) * size).
+		Limit(size).
+		Find(&users).Error
+
+	if err != nil {
+		logger.Error(map[string]interface{}{
+			"error":  err.Error(),
+			"method": "ListUsers",
+			"page":   page,
+			"size":   size,
+		})
+		return nil, handleDBError(err)
+	}
+	return users, nil
+}
+
+// 处理数据库错误
+func handleDBError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("记录不存在")
+	}
+	return errors.New("数据库操作失败")
+}
+
