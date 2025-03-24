@@ -13,6 +13,7 @@ import {
     message,
     Select,
     Tooltip,
+    DatePicker,
 } from "antd"
 import type { TableProps } from "antd"
 import "../../mock/userMock"
@@ -21,28 +22,56 @@ import {
     deleteAlarmInfo,
     updateAlarmInfo,
     addAlarmInfo,
+    processAlarm,
 } from "../../api/modules/alarmInfo"
 import { AlarmInfoType } from "../../interface/alarmInfo"
+import dayjs from "dayjs"
 
 const { Search } = Input
 const { Text } = Typography
 
+const AlarmLevelOptions = [
+    { label: "紧急", value: "紧急" },
+    { label: "重要", value: "重要" },
+    { label: "一般", value: "一般" },
+]
+
+const AlarmStatusOptions = [
+    { label: "已读", value: "已读" },
+    { label: "暂不处理", value: "暂不处理" },
+    { label: "未读", value: "未读" },
+]
+
+const AlarmTypeOptions = [
+    { label: "温度异常", value: "温度异常" },
+    { label: "设备离线", value: "设备离线" },
+    { label: "设备故障", value: "设备故障" },
+    { label: "传感器异常", value: "传感器异常" },
+    { label: "网络异常", value: "网络异常" },
+    { label: "温控系统故障", value: "温控系统故障" },
+    { label: "电量不足", value: "电量不足" },
+    { label: "其他", value: "其他" },
+]
+
 const AlarmInfoTable: React.FC = () => {
     const [data, setData] = useState<AlarmInfoType[]>([])
     const [filteredData, setFilteredData] = useState<AlarmInfoType[]>([])
-    const [modalVisible, setModalVisible] = useState(false)
-    const [editingAlarmInfo, setEditingAlarmInfo] =
-        useState<AlarmInfoType | null>(null)
-    const [form] = Form.useForm()
+    const [editModalVisible, setEditModalVisible] = useState(false)
+    const [processModalVisible, setProcessModalVisible] = useState(false)
+    const [createModalVisible, setCreateModalVisible] = useState(false)
+    const [currentAlarm, setCurrentAlarm] = useState<AlarmInfoType | null>(null)
+    const [editForm] = Form.useForm()
+    const [processForm] = Form.useForm()
+    const [createForm] = Form.useForm()
     const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        if (modalVisible && editingAlarmInfo) {
-            form.setFieldsValue(editingAlarmInfo)
-        } else if (modalVisible) {
-            form.resetFields()
-        }
-    }, [modalVisible, editingAlarmInfo, form])
+    // useEffect(() => {
+    //     if (modalVisible && editingAlarmInfo) {
+    //         form.setFieldsValue(editingAlarmInfo)
+    //     } else if (modalVisible) {
+    //         form.resetFields()
+    //     }
+    // }, [modalVisible, editingAlarmInfo, form])
 
     const fetchAlarmInfo = async () => {
         setLoading(true)
@@ -51,7 +80,7 @@ const AlarmInfoTable: React.FC = () => {
             setData(response)
             setFilteredData(response)
         } catch {
-            message.error("获取用户列表失败")
+            message.error("获取报警列表失败")
         } finally {
             setLoading(false)
         }
@@ -73,58 +102,118 @@ const AlarmInfoTable: React.FC = () => {
         }
     }
 
+    // 删除报警
     const handleDelete = async (id: number) => {
-        console.log("即将删除警报 ID:", id)
         try {
-            const response = await deleteAlarmInfo(id)
-            console.log("删除警报返回数据：", response)
-
-            if (!response || response.code !== 200) {
-                throw new Error(
-                    `删除警报失败，返回数据：${JSON.stringify(response)}`
-                )
-            }
-
-            message.success("警报已删除")
+            await deleteAlarmInfo(id)
+            message.success("报警已删除")
             fetchAlarmInfo()
-        } catch (error) {
-            console.error("删除警报出错:", error)
-            message.error("删除失败，请重试")
+        } catch {
+            message.error("删除失败")
         }
     }
 
     // 处理编辑用户
-    const handleEdit = (alarm: AlarmInfoType) => {
-        setEditingAlarmInfo(alarm)
-        setModalVisible(true)
-        form.setFieldsValue(alarm)
+    const handleEdit = (record: AlarmInfoType) => {
+        setCurrentAlarm(record)
+        editForm.setFieldsValue({
+            ...record,
+            alarm_time: dayjs(record.alarm_time).format("YYYY-MM-DD HH:mm:ss"),
+        })
+        setEditModalVisible(true)
+    }
+
+    // 提交编辑
+    const handleEditSubmit = async () => {
+        try {
+            const values = await editForm.validateFields()
+            await updateAlarmInfo(currentAlarm!.id, {
+                ...values,
+                alarm_time: values.alarm_time.format("YYYY-MM-DD HH:mm:ss"),
+            })
+            message.success("报警信息已更新")
+            setEditModalVisible(false)
+            fetchAlarmInfo()
+        } catch {
+            message.error("更新失败")
+        }
+    }
+
+    // 打开处理弹窗
+    const handleProcess = (record: AlarmInfoType) => {
+        setCurrentAlarm(record)
+        processForm.setFieldsValue({
+            alarm_status: record.alarm_status,
+            remark: record.remark,
+        })
+        setProcessModalVisible(true)
+    }
+
+    // 提交处理
+    const handleProcessSubmit = async () => {
+        try {
+            const values = await processForm.validateFields()
+            await processAlarm(currentAlarm!.id, values)
+            message.success("处理状态已更新")
+            setProcessModalVisible(false)
+            fetchAlarmInfo()
+        } catch {
+            message.error("处理失败")
+        }
+    }
+
+    // 打开新增弹窗
+    const handleCreate = () => {
+        setCurrentAlarm(null)
+        createForm.resetFields()
+        setCreateModalVisible(true)
+    }
+
+    // 提交新增
+    const handleCreateSubmit = async () => {
+        try {
+            const values = await createForm.validateFields()
+            await addAlarmInfo({
+                ...values,
+                alarm_time: values.alarm_time.format(),
+                // 自动生成默认状态
+                alarm_status: "未读",
+                remark: "",
+            })
+            message.success("报警信息已创建")
+            setCreateModalVisible(false)
+            fetchAlarmInfo()
+            createForm.resetFields()
+        } catch {
+            message.error("创建失败")
+        }
     }
 
     // 处理新增用户
-    const handleAdd = () => {
-        setEditingAlarmInfo(null)
-        form.resetFields()
-        setModalVisible(true)
-    }
+    // const handleAdd = () => {
+    //     setEditingAlarmInfo(null)
+    //     form.resetFields()
+    //     setModalVisible(true)
+    // }
 
-    const handleSave = async () => {
-        try {
-            const values = await form.validateFields()
-            if (editingAlarmInfo) {
-                await updateAlarmInfo(editingAlarmInfo.id, values)
-                message.success("警报信息已更新")
-            } else {
-                await addAlarmInfo(values)
-                message.success("新警报信息已添加")
-            }
-            fetchAlarmInfo()
+    // const handleSave = async () => {
+    //     try {
+    //         const values = await form.validateFields()
+    //         if (editingAlarmInfo) {
+    //             await updateAlarmInfo(editingAlarmInfo.id, values)
+    //             message.success("警报信息已更新")
+    //         } else {
+    //             await addAlarmInfo(values)
+    //             message.success("新警报信息已添加")
+    //         }
+    //         fetchAlarmInfo()
 
-            setModalVisible(false)
-            // message.success(editingAlarmInfo ? "警报信息已更新" : "用户已添加")
-        } catch {
-            message.error("操作失败，请重试")
-        }
-    }
+    //         setModalVisible(false)
+    //         // message.success(editingAlarmInfo ? "警报信息已更新" : "用户已添加")
+    //     } catch {
+    //         message.error("操作失败，请重试")
+    //     }
+    // }
 
     const columns: TableProps<AlarmInfoType>["columns"] = [
         {
@@ -206,8 +295,11 @@ const AlarmInfoTable: React.FC = () => {
             // width: 160,
             render: (_, record) => (
                 <Space>
+                    <Button size="small" onClick={() => handleProcess(record)}>
+                        处理报警
+                    </Button>
                     <Button size="small" onClick={() => handleEdit(record)}>
-                        标记处理
+                        编辑
                     </Button>
                     <Button
                         size="small"
@@ -241,7 +333,7 @@ const AlarmInfoTable: React.FC = () => {
                         </Space>
                     </Col>
                     <Col>
-                        <Button type="primary" onClick={handleAdd}>
+                        <Button type="primary" onClick={handleCreate}>
                             新增警报
                         </Button>
                     </Col>
@@ -261,80 +353,155 @@ const AlarmInfoTable: React.FC = () => {
                     // scroll={{ x: 1500 }}
                 />
 
+                {/* 编辑弹窗 */}
                 <Modal
-                    title={editingAlarmInfo ? "处理报警" : "新建报警"}
-                    open={modalVisible}
-                    onOk={handleSave}
-                    onCancel={() => setModalVisible(false)}
-                    destroyOnClose
+                    title="编辑报警信息"
+                    open={editModalVisible}
+                    onOk={handleEditSubmit}
+                    onCancel={() => setEditModalVisible(false)}
                     width={600}
                 >
-                    <Form form={form} layout="vertical" preserve={false}>
-                        {/* 冷链选择（实际应接入冷链数据） */}
+                    <Form form={editForm} layout="vertical">
                         <Form.Item
                             name="cold_chain_id"
-                            label="所属冷链"
+                            label="冷链模块ID"
                             rules={[{ required: true }]}
                         >
-                            {/* <Select options=冷链选项数据 /> */}
+                            <Input disabled />
                         </Form.Item>
 
-                        {/* 设备ID */}
                         <Form.Item
-                            name="machine_id"
-                            label="设备编号"
+                            name="alarm_time"
+                            label="报警时间"
                             rules={[{ required: true }]}
                         >
-                            <Input />
+                            <DatePicker showTime />
                         </Form.Item>
 
-                        {/* 报警类型 */}
                         <Form.Item
                             name="alarm_type"
                             label="报警类型"
                             rules={[{ required: true }]}
                         >
-                            <Select
-                                options={[
-                                    { label: "温度异常", value: "temperature" },
-                                    { label: "湿度异常", value: "humidity" },
-                                    { label: "设备离线", value: "offline" },
-                                ]}
-                            />
+                            <Input />
                         </Form.Item>
 
-                        {/* 报警级别 */}
                         <Form.Item
                             name="alarm_level"
-                            label="严重级别"
-                            initialValue="一般"
+                            label="报警级别"
+                            rules={[{ required: true }]}
                         >
-                            {/* <Select options={AlarmLevelOptions} /> */}
+                            <Select options={AlarmLevelOptions} />
                         </Form.Item>
 
-                        {/* 处理状态 */}
-                        {editingAlarmInfo && (
-                            <Form.Item
-                                name="alarm_status"
-                                label="处理状态"
-                                rules={[{ required: true }]}
-                            >
-                                {/* <Select options={AlarmStatusOptions} /> */}
-                            </Form.Item>
-                        )}
-
-                        {/* 报警描述 */}
                         <Form.Item
                             name="alarm_description"
-                            label="详细描述"
+                            label="报警描述"
                             rules={[{ required: true }]}
                         >
                             <Input.TextArea rows={3} />
                         </Form.Item>
+                    </Form>
+                </Modal>
 
-                        {/* 备注信息 */}
+                {/* 处理弹窗 */}
+                <Modal
+                    title="处理报警"
+                    open={processModalVisible}
+                    onOk={handleProcessSubmit}
+                    onCancel={() => setProcessModalVisible(false)}
+                >
+                    <Form form={processForm} layout="vertical">
+                        <Form.Item
+                            name="alarm_status"
+                            label="处理状态"
+                            rules={[{ required: true }]}
+                        >
+                            <Select options={AlarmStatusOptions} />
+                        </Form.Item>
+
                         <Form.Item name="remark" label="处理备注">
-                            <Input.TextArea placeholder="请输入处理意见或说明" />
+                            <Input.TextArea rows={3} />
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {/* 新增报警弹窗 */}
+                <Modal
+                    title="新建报警信息"
+                    open={createModalVisible}
+                    onOk={handleCreateSubmit}
+                    onCancel={() => {
+                        setCreateModalVisible(false)
+                        createForm.resetFields()
+                    }}
+                    width={600}
+                    destroyOnClose
+                >
+                    <Form form={createForm} layout="vertical">
+                        <Form.Item
+                            name="cold_chain_id"
+                            label="冷链模块ID"
+                            rules={[
+                                { required: true, message: "请输入冷链模块ID" },
+                            ]}
+                        >
+                            <Input placeholder="请输入冷链模块ID" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="machine_id"
+                            label="设备物理ID"
+                            rules={[
+                                { required: true, message: "请输入设备ID" },
+                            ]}
+                        >
+                            <Input placeholder="请输入设备ID" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="alarm_time"
+                            label="报警时间"
+                            initialValue={dayjs()}
+                            rules={[
+                                { required: true, message: "请选择报警时间" },
+                            ]}
+                        >
+                            <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="alarm_type"
+                            label="报警类型"
+                            rules={[
+                                { required: true, message: "请选择报警类型" },
+                            ]}
+                        >
+                            <Select options={AlarmTypeOptions} />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="alarm_level"
+                            label="报警级别"
+                            initialValue="一般"
+                            rules={[
+                                { required: true, message: "请选择报警级别" },
+                            ]}
+                        >
+                            <Select options={AlarmLevelOptions} />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="alarm_description"
+                            label="报警描述"
+                            rules={[
+                                { required: true, message: "请输入报警描述" },
+                            ]}
+                        >
+                            <Input.TextArea
+                                rows={3}
+                                placeholder="请输入详细报警描述..."
+                            />
                         </Form.Item>
                     </Form>
                 </Modal>

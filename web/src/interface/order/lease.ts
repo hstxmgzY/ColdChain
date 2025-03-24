@@ -1,7 +1,15 @@
 export interface LeaseType {
     id: number // 主键
     order_number: string // 订单编号
-    status: "待支付" | "已支付" | "已审核" | "已发货" | "已完成" | "已取消"
+    status:
+        | "待支付"
+        | "已支付"
+        | "已审核"
+        | "已驳回"
+        | "已发货"
+        | "已完成"
+        | "已取消"
+        | "已驳回"
     price: number // 价格
     create_time: string // 创建时间
     delivery_time: string // 取货时间

@@ -38,3 +38,23 @@ export const deleteAlarmInfo = async (alarmId: number) => {
     console.log("deleteAlarm API 返回数据：", response)
     return response
 }
+
+// 在原有接口文件中追加以下内容
+
+/**
+ * 处理报警信息（更新状态和备注）
+ * @param alarmId 报警ID
+ * @param processData 处理参数
+ */
+export const processAlarm = (
+    alarmId: number,
+    processData: {
+        alarm_status: "已读" | "暂不处理" | "未读"
+        remark?: string
+    }
+) => {
+    return http.post(`/alarm/process/${alarmId}`, processData)
+}
+
+// 类型增强（可选）
+export type ProcessAlarmParams = Parameters<typeof processAlarm>[1]

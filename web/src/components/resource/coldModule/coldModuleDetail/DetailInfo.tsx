@@ -213,7 +213,7 @@ const TemperatureChart = () => {
 
     return (
         <div style={{ padding: 16 }}>
-            <Typography.Title level={5}>设备预警记录</Typography.Title>
+            <Typography.Title level={5}>设备温度记录</Typography.Title>
             <Tabs
                 activeKey={timeRange}
                 onChange={(key) => setTimeRange(key as any)}

@@ -13,13 +13,10 @@ export const getAuditList = async (
 
 // 通过审核订单
 export const approveOrder = async (orderNumber: string): Promise<void> => {
-    await http.post(`/order/review/approve`, { orderNumber })
+    await http.post(`/order/review/approve/${orderNumber}`)
 }
 
 // 驳回审核订单
-export const rejectOrder = async (
-    orderNumber: string,
-    reason: string
-): Promise<void> => {
-    await http.post(`/order/review/reject`, { orderNumber, reason })
+export const rejectOrder = async (orderNumber: string, reason: string) => {
+    await http.post(`/order/review/reject/${orderNumber}`, { reason })
 }

@@ -20,12 +20,12 @@ const { Text } = Typography
 const mockProducts = [
     {
         id: 1,
-        productName: "新冠疫苗",
+        productName: "巧乐兹",
         category: "medical",
         weight: 0.5,
         volume: 0.1,
     },
-    {
+    { 
         id: 2,
         productName: "海鲜刺身",
         category: "fresh",
