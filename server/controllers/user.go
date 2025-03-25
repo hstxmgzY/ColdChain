@@ -5,6 +5,7 @@ import (
 	"coldchain/dto"
 	"coldchain/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,7 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 	for _, user := range users {
 		// 解析地址数据
 		var addresses []dto.Address
+		fmt.Printf("%s", user.Address.String())
 		if err := json.Unmarshal(user.Address, &addresses); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
 			return
@@ -137,6 +139,9 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	}
 	if req.RoleID != nil {
 		user.RoleID = *req.RoleID
+	}
+	if req.Phone != nil {
+		user.Phone = *req.Phone
 	}
 	if req.Address != nil {
 		addressJSON, err := json.Marshal(*req.Address)

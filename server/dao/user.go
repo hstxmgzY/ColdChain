@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"coldchain/models"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,6 +22,9 @@ type UserRepository struct {
 }
 
 func init() {
+	// logger.Debug(config.DB_USERNAME + "%s:%s@tcp" + config.DB_PASSWORD + "@tcp(" +
+	// 	config.DB_HOST + ":" + config.DB_PORT + ")/" +
+	// 	config.DB_DATABASE + "?charset=utf8&parseTime=True&loc=Local")
 	Db, err = gorm.Open(mysql.Open(config.DB_USERNAME+":"+config.DB_PASSWORD+"@tcp("+config.DB_HOST+":"+config.DB_PORT+")/"+config.DB_DATABASE+"?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
 	if err != nil {
 		logger.Error(map[string]interface{}{"mysql connect error": err.Error()})
@@ -120,4 +124,3 @@ func handleDBError(err error) error {
 	}
 	return errors.New("数据库操作失败")
 }
-
