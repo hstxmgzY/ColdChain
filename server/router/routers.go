@@ -55,6 +55,13 @@ func Router() *gin.Engine {
 		vehicleGroup.PUT("/update/:id", vehicleCtrl.UpdateVehicle)
 		vehicleGroup.DELETE("/delete/:id", vehicleCtrl.DeleteVehicle)
 	}
+	// 初始化订单控制器
+	orderCtrl := controllers.NewOrderController(database.Db)
+	// 订单路由组
+	orderGroup := r.Group("/api/orders")
+	{
+		orderGroup.GET("/:id", orderCtrl.GetOrderDetail)
+	}
 
 	return r
 }

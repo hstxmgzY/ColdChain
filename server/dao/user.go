@@ -1,10 +1,11 @@
 package dao
 
 import (
+	"coldchain/models"
 	"coldchain/pkg/logger"
 	"errors"
 	"strings"
-	"coldchain/models"
+
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,17 @@ type UserRepository struct {
 // 修改仓库构造函数
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db} // 传递外部 db 实例
+}
+
+func (r *UserRepository) GetUserByID(userID uint) (*models.User, error) {
+	var user models.User
+	if err := r.db.First(&user, userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) { // GORM v2 使用 errors.Is()
+			return nil, errors.New("用户不存在")
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
 // 获取带角色的用户
@@ -117,6 +129,6 @@ func handleDBError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("记录不存在")
 	}
-	
+
 	return errors.New("数据库操作失败")
 }
