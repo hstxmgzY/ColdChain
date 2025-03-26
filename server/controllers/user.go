@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"coldchain/dao"
+	"coldchain/database"
 	"coldchain/dto"
 	"coldchain/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,8 +21,11 @@ type UserController struct {
 
 // 修改控制器构造函数
 func NewUserController(db *gorm.DB) *UserController {
+	if db == nil {
+		panic("NewUserController received nil DB instance")
+	}
 	return &UserController{
-		userRepo: dao.NewUserRepository(db),
+		userRepo: dao.NewUserRepository(database.Db),
 	}
 }
 
@@ -39,9 +42,7 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 
 	var response []dto.UserResponse
 	for _, user := range users {
-		// 解析地址数据
 		var addresses []dto.Address
-		fmt.Printf("%s", user.Address.String())
 		if err := json.Unmarshal(user.Address, &addresses); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
 			return
@@ -52,7 +53,7 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 			Username: user.Username,
 			Role:     user.Role.RoleName,
 			Phone:    user.Phone,
-			Address:  addresses, // 使用解析后的地址数组
+			Address:  addresses,
 		})
 	}
 
@@ -80,11 +81,17 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		return
 	}
 
+	roleId, err := c.userRepo.GetRoleId(req.Role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "错误角色名"})
+		return
+	}
+
 	user := models.User{
 		Username:     req.Username,
 		Phone:        req.Phone,
 		PasswordHash: string(hashedPassword),
-		RoleID:       req.RoleID,
+		RoleID:       uint(roleId),
 		Address:      datatypes.JSON(addressJSON), // 使用正确的JSON类型
 	}
 
@@ -137,8 +144,14 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 		}
 		user.PasswordHash = string(hashed)
 	}
-	if req.RoleID != nil {
-		user.RoleID = *req.RoleID
+	if req.Role != nil {
+		roleID, err := c.userRepo.GetRoleId(*req.Role)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "错误角色名"})
+			return
+		}
+		user.Role.ID = uint(roleID)
+		user.Role.RoleName = *req.Role
 	}
 	if req.Phone != nil {
 		user.Phone = *req.Phone
@@ -153,7 +166,11 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	}
 
 	if err := c.userRepo.UpdateUser(user); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if err == gorm.ErrDuplicatedKey {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "有重复的记录"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
@@ -181,7 +198,6 @@ func (c *UserController) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	// 调用 `dao` 层删除用户
 	if err := c.userRepo.DeleteUser(uint(userID)); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "删除用户失败"})
 		return

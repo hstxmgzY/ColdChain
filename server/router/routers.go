@@ -2,10 +2,27 @@ package router
 
 import (
 	"coldchain/controllers"
-	"coldchain/dao" 
+	"coldchain/database"
 	"coldchain/pkg/logger"
+
 	"github.com/gin-gonic/gin"
 )
+
+func CorsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") // 允许跨域
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// 处理预检请求
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(200)
+			return
+		}
+
+		c.Next()
+	}
+}
 
 func Router() *gin.Engine {
 	r := gin.Default()
@@ -13,18 +30,30 @@ func Router() *gin.Engine {
 	// 中间件配置
 	r.Use(gin.LoggerWithConfig(logger.LoggerToFile()))
 	r.Use(logger.Recover)
-	
+	r.Use(CorsMiddleware())
 
 	// 初始化控制器
-	userCtrl := controllers.NewUserController(dao.Db)
+	userCtrl := controllers.NewUserController(database.Db)
 
 	// 用户路由组
-	userGroup := r.Group("/users")
+	userGroup := r.Group("/api/user")
 	{
-		userGroup.GET("", userCtrl.GetUsers)
-		userGroup.POST("", userCtrl.CreateUser)
-		userGroup.PUT("/:id", userCtrl.UpdateUser)
-		userGroup.DELETE("/:id", userCtrl.DeleteUser)
+		userGroup.GET("/list", userCtrl.GetUsers)
+		userGroup.POST("/add", userCtrl.CreateUser)
+		userGroup.PUT("/update/:id", userCtrl.UpdateUser)
+		userGroup.DELETE("/delete/:id", userCtrl.DeleteUser)
+	}
+
+	// 初始化车辆控制器
+	vehicleCtrl := controllers.NewVehicleController(database.Db)
+
+	// 车辆路由组
+	vehicleGroup := r.Group("/api/resource/vehicle")
+	{
+		vehicleGroup.GET("/list", vehicleCtrl.GetVehicleList)
+		vehicleGroup.POST("/add", vehicleCtrl.AddVehicle)
+		vehicleGroup.PUT("/update/:id", vehicleCtrl.UpdateVehicle)
+		vehicleGroup.DELETE("/delete/:id", vehicleCtrl.DeleteVehicle)
 	}
 
 	return r

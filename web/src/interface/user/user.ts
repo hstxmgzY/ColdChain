@@ -6,3 +6,9 @@ export interface UserType {
     phone: string;
     address: object[];
 }
+
+export interface Address {
+    name: string;
+    phone: string;
+    detail: string;
+}

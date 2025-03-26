@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosRequestConfig, Method } from "axios"
 import { message } from "antd"
 
 const service = axios.create({
-    baseURL: "http://localhost:9000/api",
+    baseURL: "http://localhost:9999/api",
     timeout: 3000,
     withCredentials: false,
 })
@@ -62,7 +62,7 @@ service.interceptors.response.use(
             errMessage = "网络连接失败"
         }
 
-        message.error(errMessage)
+        // message.error(errMessage)
         return Promise.reject(error)
     }
 )

@@ -19,7 +19,7 @@ type CreateUserRequest struct {
 	Username string    `json:"username" binding:"required"`
 	Password string    `json:"password" binding:"required,min=8"`
 	Phone    string    `json:"phone" binding:"required"`
-	RoleID   uint      `json:"role_id" binding:"required"`
+	Role     string    `json:"role" binding:"required"`
 	Address  []Address `json:"address" binding:"omitempty,dive"` // 地址可以为空
 }
 
@@ -27,6 +27,6 @@ type UpdateUserRequest struct {
 	Username *string    `json:"username"`
 	Password *string    `json:"password" binding:"omitempty,min=8"`
 	Phone    *string    `json:"phone" binding:"omitempty"`
-	RoleID   *uint      `json:"role_id"`
+	Role     *string    `json:"role"`
 	Address  *[]Address `json:"address" binding:"omitempty,dive"` // 允许更新地址数组
 }

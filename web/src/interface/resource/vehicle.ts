@@ -1,11 +1,8 @@
 export default interface VehicleType {
     id: number
-    cardNumber: string // 车牌号
-    status: "空闲" | "使用中" | "维修中"|"停用" // 车辆状态
-    type: string // 车辆类型
-    GPS: string // GPS 位置
-    carryingNumber: number // 最多可承载冷链箱个数
-    carryingWeight: number // 承载重量 (kg)
-    carryingVolume: number // 承载体积 (m³)
+    plateNumber: string // 车牌号
+    status: "空闲" | "使用中" | "维修中" | "停用" // 车辆状态
+    // GPS: string // GPS 位置
+    MaxCapacity: number // 最多可承载冷链箱个数
     imgUrl: string // 车辆图片
 }

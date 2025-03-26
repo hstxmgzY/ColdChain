@@ -4,7 +4,7 @@ database:
     port: 3306
     database: coldchain
     username: root
-    password: 123456
+    password: 
 server:
     admin: coldchain
     password: 123456

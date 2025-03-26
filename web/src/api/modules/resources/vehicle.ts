@@ -1,9 +1,9 @@
 import  VehicleType from "../../../interface/resource/vehicle"
 import { http } from "../../request"
 
-export const getVehicleList = async (): Promise<VehicleType[]> => {
+export const getVehicleList = async () => {
     const response = await http.get<VehicleType[]>('/resource/vehicle/list')
-    return response.data
+    return response
 }
 
 export const addVehicle = (vehicleData: VehicleType) => {

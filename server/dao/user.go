@@ -1,44 +1,19 @@
 package dao
 
 import (
-	"coldchain/pkg/config"
 	"coldchain/pkg/logger"
 	"errors"
-	"time"
-
+	"strings"
 	"coldchain/models"
-
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 var (
-	Db  *gorm.DB
 	err error
 )
 
 type UserRepository struct {
 	db *gorm.DB
-}
-
-func init() {
-	// logger.Debug(config.DB_USERNAME + "%s:%s@tcp" + config.DB_PASSWORD + "@tcp(" +
-	// 	config.DB_HOST + ":" + config.DB_PORT + ")/" +
-	// 	config.DB_DATABASE + "?charset=utf8&parseTime=True&loc=Local")
-	Db, err = gorm.Open(mysql.Open(config.DB_USERNAME+":"+config.DB_PASSWORD+"@tcp("+config.DB_HOST+":"+config.DB_PORT+")/"+config.DB_DATABASE+"?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
-	if err != nil {
-		logger.Error(map[string]interface{}{"mysql connect error": err.Error()})
-		panic("数据库连接失败")
-	}
-
-	sqlDB, err := Db.DB()
-	if err != nil {
-		logger.Error(map[string]interface{}{"db error": err.Error()})
-		panic("数据库连接失败")
-	}
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
 }
 
 // 修改仓库构造函数
@@ -71,15 +46,35 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 	return nil
 }
 
+func (r *UserRepository) GetRoleId(role_name string) (int, error) {
+	var role_id int
+	if err := r.db.Table("user_roles").
+		Select("id").
+		Where("role_name = ?", role_name).
+		Scan(&role_id).Error; err != nil {
+		logger.Error(map[string]interface{}{
+			"error":  err.Error(),
+			"method": "GetRoleId",
+			"params": role_name,
+		})
+		return 0, handleDBError(err)
+	}
+	return role_id, nil
+}
+
 // 更新用户
 func (r *UserRepository) UpdateUser(user *models.User) error {
 	if err := r.db.Save(user).Error; err != nil {
-		logger.Error(map[string]interface{}{
-			"error":  err.Error(),
-			"method": "UpdateUser",
-			"params": user,
-		})
-		return handleDBError(err)
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return gorm.ErrDuplicatedKey
+		} else {
+			logger.Error(map[string]interface{}{
+				"error":  err.Error(),
+				"method": "UpdateUser",
+				"params": user,
+			})
+			return handleDBError(err)
+		}
 	}
 	return nil
 }
@@ -122,5 +117,6 @@ func handleDBError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("记录不存在")
 	}
+	
 	return errors.New("数据库操作失败")
 }

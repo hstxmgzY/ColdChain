@@ -16,7 +16,7 @@ import {
     DatePicker,
 } from "antd"
 import type { TableProps } from "antd"
-import "../../mock/userMock"
+// import "../../mock/userMock"
 import {
     getAlarmInfoList,
     deleteAlarmInfo,

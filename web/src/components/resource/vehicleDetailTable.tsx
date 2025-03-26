@@ -13,6 +13,7 @@ import {
     message,
     Select,
     Tabs,
+    Image,
 } from "antd"
 import type { TableProps, TabsProps } from "antd"
 import {
@@ -51,8 +52,7 @@ const VehicleDetailTable: React.FC = () => {
     const [form] = Form.useForm()
     const [loading, setLoading] = useState(false)
     const [searchParams, setSearchParams] = useState({
-        cardNumber: "",
-        type: "",
+        plateNumber: "",
         status: "",
     })
 
@@ -70,12 +70,10 @@ const VehicleDetailTable: React.FC = () => {
         setFilteredData(
             data.filter((item) => {
                 return (
-                    (!searchParams.cardNumber ||
-                        item.cardNumber.includes(searchParams.cardNumber)) &&
+                    (!searchParams.plateNumber ||
+                        item.plateNumber.includes(searchParams.plateNumber)) &&
                     (!searchParams.status ||
-                        item.status === searchParams.status) &&
-                    (!searchParams.type ||
-                        item.type.includes(searchParams.type))
+                        item.status === searchParams.status)
                 )
             })
         )
@@ -109,12 +107,17 @@ const VehicleDetailTable: React.FC = () => {
             key: "维修中",
             label: "维修中",
         },
+        {
+            key: "停用",
+            label: "停用",
+        },
     ]
 
     const fetchVehicles = async () => {
         setLoading(true)
         try {
-            const response = await getVehicleList()
+            const response: VehicleType[] = await getVehicleList()
+            console.log("获取车辆列表：", response)
             setData(response)
             setFilteredData(response)
         } catch {
@@ -147,11 +150,15 @@ const VehicleDetailTable: React.FC = () => {
     const handleSave = async () => {
         try {
             const values = await form.validateFields()
+            const processedValues = {
+                ...values,
+                MaxCapacity: Number(values.MaxCapacity), // 转换为数字
+            }
             if (editingVehicle) {
-                await updateVehicle(editingVehicle.id, values)
+                await updateVehicle(editingVehicle.id, processedValues)
                 message.success("车辆信息已更新")
             } else {
-                await addVehicle(values)
+                await addVehicle(processedValues)
                 message.success("车辆已添加")
             }
             fetchVehicles()
@@ -170,8 +177,8 @@ const VehicleDetailTable: React.FC = () => {
         },
         {
             title: "车牌号码",
-            dataIndex: "cardNumber",
-            key: "cardNumber",
+            dataIndex: "plateNumber",
+            key: "plateNumber",
         },
         {
             title: "状态",
@@ -183,6 +190,7 @@ const VehicleDetailTable: React.FC = () => {
                     空闲: "green",
                     使用中: "gold",
                     维修中: "red",
+                    停用: "gray",
                 }
                 return <Tag color={statusColors[status]}>{status}</Tag>
             },
@@ -190,6 +198,7 @@ const VehicleDetailTable: React.FC = () => {
                 空闲: "green",
                 使用中: "gold",
                 维修中: "red",
+                停用: "gray",
             }).map(([status]) => ({
                 text: status,
                 value: status,
@@ -197,24 +206,21 @@ const VehicleDetailTable: React.FC = () => {
             onFilter: (value, record) => record.status === value,
         },
         {
-            title: "承载冷链箱个数",
-            dataIndex: "carryingNumber",
-            key: "carryingNumber",
+            title: "最大可承载冷链箱个数",
+            dataIndex: "MaxCapacity",
+            key: "MaxCapacity",
         },
         {
-            title: "可用冷链箱个数",
-            dataIndex: "availableCarryingNumber",
-            key: "availableCarryingNumber",
-        },
-        {
-            title: "承载重量 (kg)",
-            dataIndex: "carryingWeight",
-            key: "carryingWeight",
-        },
-        {
-            title: "承载体积 (m³)",
-            dataIndex: "carryingVolume",
-            key: "carryingVolume",
+            title: "车辆图片",
+            dataIndex: "imgUrl",
+            key: "imgUrl",
+            render: (imgUrl) => (
+                <Image
+                    src={imgUrl}
+                    alt="车辆图片"
+                    style={{ width: 50, height: 50 }}
+                />
+            ),
         },
         {
             title: "操作",
@@ -222,12 +228,6 @@ const VehicleDetailTable: React.FC = () => {
             fixed: "right",
             render: (_, record) => (
                 <Space>
-                    <Button
-                        type="link"
-                        onClick={() => handleEdit(record as VehicleType)}
-                    >
-                        详情
-                    </Button>
                     <Button
                         type="link"
                         onClick={() => handleEdit(record as VehicleType)}
@@ -271,23 +271,11 @@ const VehicleDetailTable: React.FC = () => {
                     <Space>
                         <Text>车牌号码：</Text>
                         <Search
-                            placeholder="输入订单编号"
-                            onSearch={(v) => handleSearch("type", v)}
-                            style={{ width: 250,
-                                marginRight: 30 }}
-                        />
-                    </Space>
-                    <Space>
-                        <Text>车辆类型</Text>
-                        <Select
-                            placeholder="全部状态"
-                            onChange={(v) => handleSearch("status", v)}
-                            style={{ width: 250 }}
+                            placeholder="输入车牌号码"
                             allowClear
-                        >
-                            <Select.Option value="卡车">卡车</Select.Option>
-                            <Select.Option value="货车">货车</Select.Option>
-                        </Select>
+                            onSearch={(v) => handleSearch("plateNumber", v)}
+                            style={{ width: 250, marginRight: 30 }}
+                        />
                     </Space>
                 </Col>
             </Row>
@@ -318,21 +306,11 @@ const VehicleDetailTable: React.FC = () => {
             >
                 <Form form={form} layout="vertical">
                     <Form.Item
-                        name="cardNumber"
+                        name="plateNumber"
                         label="车牌号码"
                         rules={[{ required: true, message: "请输入车牌号码" }]}
                     >
                         <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="type"
-                        label="车辆类型"
-                        rules={[{ required: true, message: "请选择车辆类型" }]}
-                    >
-                        <Select>
-                            <Select.Option value="卡车">卡车</Select.Option>
-                            <Select.Option value="货车">货车</Select.Option>
-                        </Select>
                     </Form.Item>
                     <Form.Item
                         name="status"
@@ -343,14 +321,23 @@ const VehicleDetailTable: React.FC = () => {
                             <Select.Option value="空闲">空闲</Select.Option>
                             <Select.Option value="使用中">使用中</Select.Option>
                             <Select.Option value="维修中">维修中</Select.Option>
+                            <Select.Option value="停用">停用</Select.Option>
                         </Select>
                     </Form.Item>
                     <Form.Item
-                        name="carryingNumber"
-                        label="承载冷链箱个数"
+                        name="MaxCapacity"
+                        label="最多可承载冷链箱个数"
                         rules={[{ required: true, message: "请输入承载数量" }]}
                     >
                         <Input type="number" />
+                    </Form.Item>
+                    {/* 之后改为图片上传！！ */}
+                    <Form.Item
+                        name="imgUrl"
+                        label="车辆图片"
+                        rules={[{ required: true, message: "请输入图片链接" }]}
+                    >
+                        <Input placeholder="请输入图片链接" />
                     </Form.Item>
                 </Form>
             </Modal>
