@@ -1,2 +1,0 @@
-{"error":"open conf.yaml: no such file or directory","level":"error","msg":"Failed to read the configuration file","time":"2025-02-16"}
-{"level":"error","msg":"","mysql connect error":"Error 1045: Access denied for user 'root'@'localhost' (using password: NO)","time":"2025-02-16"}

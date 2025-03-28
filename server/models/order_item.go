@@ -9,4 +9,7 @@ type OrderItem struct {
 	ProductID uint    `gorm:"foreignKey:ProductID;not null" json:"product_id"`
 	Quantity  int     `gorm:"default:1" json:"quantity"`
 	UnitPrice float64 `gorm:"type:decimal(10,2);not null" json:"unit_price"`
+	Product   Product `gorm:"foreignKey:ProductID" json:"product"`
+	CreatedAt string  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt string  `gorm:"autoUpdateTime" json:"updated_at"`
 }

@@ -1,9 +1,10 @@
 import React from "react";
+import OrderTest from "../../components/order/orderTest";
 
 const Tracking = () => {
     return (
         <div>
-            <h1>Tracking Page</h1>
+            <OrderTest />
         </div>
     )
 }

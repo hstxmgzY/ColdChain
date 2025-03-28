@@ -2,9 +2,9 @@ package main
 
 import (
 	"coldchain/database"
+	"coldchain/models"
 	"coldchain/pkg/logger"
 	"coldchain/router"
-	"coldchain/models"
 	"fmt"
 )
 
@@ -17,15 +17,18 @@ func main() {
 	}
 	fmt.Println("数据库连接成功") // 确保连接成功
 	err := database.Db.AutoMigrate(
-        &models.OrderStatus{},
-        &models.ProductCategory{},
-        &models.Product{},
-        &models.RentalOrder{},
-        &models.OrderItem{},
-    )
-    if err != nil {
+		&models.User{},
+		&models.UserRole{},
+		&models.UserRole{},
+		&models.OrderStatus{},
+		&models.Category{},
+		&models.Product{},
+		&models.RentalOrder{},
+		&models.OrderItem{},
+	)
+	if err != nil {
 		logger.Fatal(map[string]interface{}{"error": err.Error()}, "AutoMigrate failed")
-    }
+	}
 	logger.Info(map[string]interface{}{"message": "数据库迁移成功"}, "Database migrated successfully")
 	// 启动路由
 	r := router.Router()

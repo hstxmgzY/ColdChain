@@ -29,6 +29,18 @@ func (r *OrderRepository) GetOrderByID(orderID uint) (*models.RentalOrder, error
 	return &order, nil
 }
 
+func (r *OrderRepository) ListOrders() ([]models.RentalOrder, error) {
+	orders := []models.RentalOrder{}
+	err := r.db.Preload("User.Role").
+		Preload("OrderStatus").
+		Preload("OrderItems.Product.Category").
+		Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (r *OrderRepository) GetOrderStatusName(statusID uint) (string, error) {
 	var orderStatus models.OrderStatus
 	err := r.db.First(&orderStatus, statusID).Error
@@ -56,11 +68,19 @@ func (r *OrderRepository) GetProductByID(productID uint) (*models.Product, error
 	return &product, nil
 }
 
-func (r *OrderRepository) GetCategoryByID(categoryID uint) (*models.ProductCategory, error) {
-	var category models.ProductCategory
+func (r *OrderRepository) GetCategoryByID(categoryID uint) (*models.Category, error) {
+	var category models.Category
 	err := r.db.First(&category, categoryID).Error
 	if err != nil {
 		return nil, err
 	}
 	return &category, nil
+}
+
+func (r *OrderRepository) CreateOrder(order *models.RentalOrder) error {
+	err := r.db.Create(order).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -254,8 +254,9 @@ const UserTable: React.FC = () => {
         setLoading(true)
         try {
             const response = await getUserList()
-            setData(response)
-            setFilteredData(response)
+            const UserList:UserType[] = response
+            setData(UserList)
+            setFilteredData(UserList)
         } catch {
             message.error("获取用户列表失败")
         } finally {
@@ -340,7 +341,7 @@ const UserTable: React.FC = () => {
             setModalVisible(false)
             message.success(editingUser ? "用户信息已更新" : "用户已添加")
         } catch (error) {
-            if (error.response.data.error === "有重复的记录") {
+            if (error === "有重复的记录") {
                 message.error("电话号码重复，请修改！")
             } else {
                 message.error("操作失败，请重试")

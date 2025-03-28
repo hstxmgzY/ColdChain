@@ -61,6 +61,7 @@ func Router() *gin.Engine {
 	orderGroup := r.Group("/api/orders")
 	{
 		orderGroup.GET("/:id", orderCtrl.GetOrderDetail)
+		orderGroup.GET("/list", orderCtrl.ListOrders)
 	}
 
 	return r

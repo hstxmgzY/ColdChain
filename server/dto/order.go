@@ -31,3 +31,22 @@ type ProductDTO struct {
 	SpecVolume   float64 `json:"spec_volume"`
 	ImageURL     string  `json:"image_url"`
 }
+
+type CreateOrderRequest struct {
+	OrderNumber  string      `json:"order_number" binding:"required"`
+	TotalPrice   float64     `json:"total_price" binding:"required"`
+	StatusID     uint        `json:"status_id" binding:"required"`
+	SenderInfo   interface{} `json:"sender_info" binding:"required"`
+	ReceiverInfo interface{} `json:"receiver_info" binding:"required"`
+	OrderNote    string      `json:"order_note"`
+	OrderItems   []OrderItem `json:"order_items" binding:"required"`
+}
+
+type OrderItem struct {
+	ID        uint    `json:"id"`
+	Quantity  int     `json:"quantity" binding:"required"`
+	UnitPrice float64 `json:"unit_price" binding:"required"`
+	ProductID uint    `json:"product_id" binding:"required"`
+}
+
+

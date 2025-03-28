@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosRequestConfig, Method } from "axios"
-import { message } from "antd"
 
 const service = axios.create({
     baseURL: "http://localhost:9999/api",
@@ -36,10 +35,12 @@ service.interceptors.response.use(
         const res = response.data
         return res
     },
-    (error: AxiosError) => {
+    (error: AxiosError<{ error?: string }>) => {
         const status = error.response?.status
         let errMessage = "请求失败"
-        if (status) {
+        if (error.response?.data?.error) {
+            errMessage = error.response.data.error // 提取后端返回的错误信息
+        } else if (status) {
             switch (status) {
                 case 401:
                     errMessage = "身份认证失败"
@@ -62,8 +63,7 @@ service.interceptors.response.use(
             errMessage = "网络连接失败"
         }
 
-        // message.error(errMessage)
-        return Promise.reject(error)
+        return Promise.reject(new Error(errMessage))
     }
 )
 
@@ -73,17 +73,30 @@ type Data<T> = {
     data: T
 }
 
+// const request =  <T>(
+//     url: string,
+//     method: Method,
+//     submitData?: object,
+//     config?: AxiosRequestConfig
+// ) => {
+//     return service.request<T, Data<T>>({
+//         url,
+//         method,
+//         [method.toLowerCase() === "get" ? "params" : "data"]: submitData,
+//         ...config, //剩余参数
+//     })
+// }
 const request = <T>(
     url: string,
     method: Method,
     submitData?: object,
     config?: AxiosRequestConfig
 ) => {
-    return service.request<T, Data<T>>({
+    return service.request<Data<T>>({
         url,
         method,
         [method.toLowerCase() === "get" ? "params" : "data"]: submitData,
-        ...config, //剩余参数
+        ...config,
     })
 }
 

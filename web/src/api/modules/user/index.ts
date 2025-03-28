@@ -1,9 +1,8 @@
 import { http } from "../../request"
 import type { UserType } from "../../../interface/user/user"
 
-export const getUserList = async () => {
+export const getUserList = async ()=> {
     const response = await http.get<UserType[]>("/user/list")
-    console.log("getUserList API 返回数据：", response)
     return response
 }
 
@@ -33,6 +32,5 @@ export const updateUser = (
 
 export const deleteUser = async (userId: number) => {
     const response = await http.delete(`/user/delete/${userId}`)
-    console.log("deleteUser API 返回数据：", response)
     return response
 }

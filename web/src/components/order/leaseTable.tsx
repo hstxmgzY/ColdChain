@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import {
     Space,
     Table,
@@ -15,15 +16,16 @@ import {
 } from "antd"
 import type { TableProps } from "antd"
 import {
-    getLeaseList,
-    updateLease,
-    deleteLease,
-} from "../../api/modules/order/lease"
+    fetchOrders,
+    selectOrders,
+    selectOrderLoading,
+    selectOrderError,
+} from "../../store/reducers/order"
+import { AppDispatch } from "../../store"
+
 import { createStyles } from "antd-style"
 import { LeaseType } from "../../interface/order/lease"
-// import '../../mock/leaseMock'
 
-// 修正 createStyles 语法
 const useStyle = createStyles(({ css }) => ({
     customTable: css`
         .ant-table {
@@ -58,6 +60,15 @@ const LeaseTable: React.FC = () => {
         receiverPhone: "",
         receiverAddress: "",
     })
+    const { styles } = useStyle()
+    const dispatch = useDispatch<AppDispatch>()
+    const orders = useSelector(selectOrders)
+    const orderLoading = useSelector(selectOrderLoading)
+    const error = useSelector(selectOrderError)
+
+    useEffect(() => {
+        dispatch(fetchOrders())
+    }, [dispatch])
 
     useEffect(() => {
         if (modalVisible && editingLease) {
@@ -102,6 +113,10 @@ const LeaseTable: React.FC = () => {
         )
     }, [data, searchParams])
 
+
+    if (orderLoading) return <p>加载中...</p>
+    if (error) return <p>错误: {error}</p>
+
     // 所有搜索处理函数
     const handleSearch = (field: keyof typeof searchParams, value: string) => {
         setSearchParams((prev) => ({
@@ -110,22 +125,22 @@ const LeaseTable: React.FC = () => {
         }))
     }
 
-    const fetchLeases = async () => {
-        setLoading(true)
-        try {
-            const response = await getLeaseList()
-            setData(response)
-            setFilteredData(response)
-        } catch {
-            message.error("获取订单列表失败")
-        } finally {
-            setLoading(false)
-        }
-    }
+    // const fetchLeases = async () => {
+    //     setLoading(true)
+    //     try {
+    //         const response = await getLeaseList()
+    //         setData(response)
+    //         setFilteredData(response)
+    //     } catch {
+    //         message.error("获取订单列表失败")
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
-    useEffect(() => {
-        fetchLeases()
-    }, [])
+    // useEffect(() => {
+    //     fetchLeases()
+    // }, [])
 
     const handleDelete = async (id: number) => {
         try {
@@ -242,7 +257,7 @@ const LeaseTable: React.FC = () => {
         },
     ]
 
-    const { styles } = useStyle()
+    
 
     // // 修改状态筛选逻辑
     // const handleStatusFilter = () => {
