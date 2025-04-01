@@ -62,6 +62,7 @@ func Router() *gin.Engine {
 	{
 		orderGroup.GET("/:id", orderCtrl.GetOrderDetail)
 		orderGroup.GET("/list", orderCtrl.ListOrders)
+		orderGroup.POST("/assign-modules", orderCtrl.AllocateColdChainModules)
 	}
 
 	return r

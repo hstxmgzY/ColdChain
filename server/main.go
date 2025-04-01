@@ -19,12 +19,13 @@ func main() {
 	err := database.Db.AutoMigrate(
 		&models.User{},
 		&models.UserRole{},
-		&models.UserRole{},
 		&models.OrderStatus{},
 		&models.Category{},
 		&models.Product{},
 		&models.RentalOrder{},
 		&models.OrderItem{},
+		&models.Vehicle{},
+		&models.Module{},
 	)
 	if err != nil {
 		logger.Fatal(map[string]interface{}{"error": err.Error()}, "AutoMigrate failed")

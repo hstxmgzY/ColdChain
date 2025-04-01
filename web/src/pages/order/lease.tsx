@@ -1,5 +1,5 @@
 import React from "react";
-import LeaseTable from "../../components/order/leaseTable";
+import LeaseTable from "../../components/order/orderTable";
 
 const Lease = () => {
     return (

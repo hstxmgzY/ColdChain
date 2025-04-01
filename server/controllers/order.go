@@ -5,13 +5,15 @@ import (
 	"coldchain/dto"
 	"net/http"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type OrderController struct {
-	orderRepo *dao.OrderRepository
-	userRepo  *dao.UserRepository
+	orderRepo  *dao.OrderRepository
+	userRepo   *dao.UserRepository
+	moduleRepo *dao.ModuleRepository
 }
 
 func NewOrderController(db *gorm.DB) *OrderController {
@@ -19,8 +21,9 @@ func NewOrderController(db *gorm.DB) *OrderController {
 		panic("NewOrderController received nil DB instance")
 	}
 	return &OrderController{
-		orderRepo: dao.NewOrderRepository(db),
-		userRepo:  dao.NewUserRepository(db),
+		orderRepo:  dao.NewOrderRepository(db),
+		userRepo:   dao.NewUserRepository(db),
+		moduleRepo: dao.NewModuleRepository(db),
 	}
 }
 
@@ -79,17 +82,35 @@ func (c *OrderController) GetOrderDetail(ctx *gin.Context) {
 			return
 		}
 
+		modules, err := c.orderRepo.GetModulesByOrderItemID(item.ID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取模块信息失败"})
+			return
+		}
+		var moduleDTOs []dto.ModuleInfoDTO
+		for _, module := range modules {
+			moduleDTOs = append(moduleDTOs, dto.ModuleInfoDTO{
+				ID:                 module.ID,
+				DeviceID:           module.DeviceID,
+				SettingTemperature: module.SettingTemperature,
+				Status:             dto.ModuleStatus(module.Status),
+				IsEnabled:          module.IsEnabled,
+			})
+		}
+
 		response.OrderItems = append(response.OrderItems, dto.OrderItemDTO{
 			ID:        item.ID,
 			Quantity:  item.Quantity,
 			UnitPrice: item.UnitPrice,
 			Product: dto.ProductDTO{
-				ID:           product.ID,
-				ProductName:  product.ProductName,
-				CategoryName: category.CategoryName, // 这里返回 CategoryName
-				SpecWeight:   product.SpecWeight,
-				SpecVolume:   product.SpecVolume,
-				ImageURL:     product.ImageURL,
+				ID:             product.ID,
+				ProductName:    product.ProductName,
+				CategoryName:   category.CategoryName,
+				MaxTemperature: product.MaxTemperature,
+				MinTemperature: product.MinTemperature,
+				SpecWeight:     product.SpecWeight,
+				SpecVolume:     product.SpecVolume,
+				ImageURL:       product.ImageURL,
 			},
 		})
 	}
@@ -143,18 +164,39 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取产品分类失败"})
 				return
 			}
+
+			modules, err := c.orderRepo.GetModulesByOrderItemID(item.ID)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取模块信息失败"})
+				return
+			}
+
+			var moduleDTOs []dto.ModuleInfoDTO
+			for _, module := range modules {
+				moduleDTOs = append(moduleDTOs, dto.ModuleInfoDTO{
+					ID:                 module.ID,
+					DeviceID:           module.DeviceID,
+					SettingTemperature: module.SettingTemperature,
+					Status:             dto.ModuleStatus(module.Status),
+					IsEnabled:          module.IsEnabled,
+				})
+			}
+
 			response.OrderItems = append(response.OrderItems, dto.OrderItemDTO{
 				ID:        item.ID,
 				Quantity:  item.Quantity,
 				UnitPrice: item.UnitPrice,
 				Product: dto.ProductDTO{
-					ID:           product.ID,
-					ProductName:  product.ProductName,
-					CategoryName: category.CategoryName, // 这里返回 CategoryName
-					SpecWeight:   product.SpecWeight,
-					SpecVolume:   product.SpecVolume,
-					ImageURL:     product.ImageURL,
+					ID:             product.ID,
+					ProductName:    product.ProductName,
+					CategoryName:   category.CategoryName,
+					MaxTemperature: product.MaxTemperature,
+					MinTemperature: product.MinTemperature,
+					SpecWeight:     product.SpecWeight,
+					SpecVolume:     product.SpecVolume,
+					ImageURL:       product.ImageURL,
 				},
+				Module: moduleDTOs,
 			})
 		}
 
@@ -164,34 +206,63 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responses)
 }
 
-// func (c *OrderController) CreateOrder(ctx *gin.Context) {
-// 	var req dto.CreateOrderRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
-// 		return
-// 	}
+func (c *OrderController) CreateOrder(ctx *gin.Context) {
+	var req dto.CreateOrderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
 
-// 	// 验证用户是否存在
-// 	user, err := c.userRepo.GetUserByID(req.UserID)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
-// 		return
-// 	}
+	// 验证用户是否存在
+	user, err := c.userRepo.GetUserByID(req.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
 
-// 	// 创建订单
-// 	order := dao.RentalOrder{
-// 		UserID:       user.ID,
-// 		OrderNumber:  req.OrderNumber,
-// 		StatusID:     req.StatusID,
-// 		SenderInfo:   req.SenderInfo,
-// 		ReceiverInfo: req.ReceiverInfo,
-// 		OrderNote:    req.OrderNote,
-// 	}
+	// 创建订单
+	order := dao.RentalOrder{
+		UserID:       user.ID,
+		OrderNumber:  req.OrderNumber,
+		StatusID:     req.StatusID,
+		SenderInfo:   req.SenderInfo,
+		ReceiverInfo: req.ReceiverInfo,
+		OrderNote:    req.OrderNote,
+	}
 
-// 	if err := c.orderRepo.CreateOrder(&order); err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
-// 		return
-// 	}
+	if err := c.orderRepo.CreateOrder(&order); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
+		return
+	}
 
-// 	ctx.JSON(http.StatusCreated, gin.H{"message": "订单创建成功", "order_id": order.ID})
-// }
+	ctx.JSON(http.StatusCreated, gin.H{"message": "订单创建成功", "order_id": order.ID})
+}
+
+// AllocateColdChainModules 处理冷链模块分配
+func (c *OrderController) AllocateColdChainModules(ctx *gin.Context) {
+	orderItems, err := c.orderRepo.GetAllOrderItems()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取订单项"})
+		return
+	}
+
+	for _, orderItem := range orderItems {
+		availableModules, err := c.moduleRepo.FindAvailableModules(orderItem.Quantity)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "查找可用冷链箱失败"})
+			return
+		}
+
+		if len(availableModules) < orderItem.Quantity {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "可用冷链箱数量不足"})
+			return
+		}
+
+		if err := c.moduleRepo.AssignModulesToOrderItem(orderItem, availableModules); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "冷链箱分配失败"})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "冷链箱分配成功"})
+}

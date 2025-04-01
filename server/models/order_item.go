@@ -13,3 +13,10 @@ type OrderItem struct {
 	CreatedAt string  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt string  `gorm:"autoUpdateTime" json:"updated_at"`
 }
+
+type OrderItemModule struct {
+	gorm.Model
+	OrderItemID uint   `gorm:"foreignKey:OrderItemID;not null" json:"order_item_id"`
+	ModuleID    uint   `gorm:"foreignKey:ModuleID;not null" json:"module_id"`
+	Module      Module `gorm:"foreignKey:ModuleID"`
+}

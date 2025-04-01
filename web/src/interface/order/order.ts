@@ -15,12 +15,12 @@ export interface OrderType {
     sender_info: {
         name: string // 姓名
         phone: string // 电话
-        address: string // 地址
+        detail: string // 地址
     }
     receiver_info: {
         name: string // 姓名
         phone: string // 电话
-        address: string // 地址
+        detail: string // 地址
     }
     order_note: string // 订单备注
     user: {

@@ -17,14 +17,16 @@ import {
 import type { TableProps } from "antd"
 import {
     fetchOrders,
+    createNewOrder,
+    updateExistingOrder,
+    removeOrder,
     selectOrders,
     selectOrderLoading,
     selectOrderError,
 } from "../../store/reducers/order"
 import { AppDispatch } from "../../store"
-
 import { createStyles } from "antd-style"
-import { LeaseType } from "../../interface/order/lease"
+import { OrderType } from "../../interface/order/order"
 
 const useStyle = createStyles(({ css }) => ({
     customTable: css`
@@ -44,12 +46,11 @@ const { Search } = Input
 const { Text } = Typography
 
 const LeaseTable: React.FC = () => {
-    const [data, setData] = useState<LeaseType[]>([])
-    const [filteredData, setFilteredData] = useState<LeaseType[]>([])
+    // const [filteredData, setFilteredData] = useState<OrderType[]>([])
     const [modalVisible, setModalVisible] = useState(false)
-    const [editingLease, setEditingLease] = useState<LeaseType | null>(null)
+    const [editingLease, setEditingLease] = useState<OrderType | null>(null)
     const [form] = Form.useForm()
-    const [loading, setLoading] = useState(false)
+    // const [loading, setLoading] = useState(false)
     const [searchParams, setSearchParams] = useState({
         orderNumber: "",
         status: "",
@@ -78,44 +79,65 @@ const LeaseTable: React.FC = () => {
         }
     }, [modalVisible, editingLease, form])
 
-    useEffect(() => {
-        if (!data) return // 防止 data 为空时报错
+    // useEffect(() => {
+    //     if (!data) return // 防止 data 为空时报错
 
-        setFilteredData(
-            data.filter((item) => {
-                return (
-                    (!searchParams.orderNumber ||
-                        item.order_number.includes(searchParams.orderNumber)) &&
-                    (!searchParams.status ||
-                        item.status === searchParams.status) &&
-                    (!searchParams.senderName ||
-                        item.sender_name.includes(searchParams.senderName)) &&
-                    (!searchParams.senderPhone ||
-                        item.sender_phone.includes(searchParams.senderPhone)) &&
-                    (!searchParams.senderAddress ||
-                        item.sender_address.includes(
-                            searchParams.senderAddress
-                        )) &&
-                    (!searchParams.receiverName ||
-                        item.receiver_name.includes(
-                            searchParams.receiverName
-                        )) &&
-                    (!searchParams.receiverPhone ||
-                        item.receiver_phone.includes(
-                            searchParams.receiverPhone
-                        )) &&
-                    (!searchParams.receiverAddress ||
-                        item.receiver_address.includes(
-                            searchParams.receiverAddress
-                        ))
-                )
-            })
+    //     setFilteredData(
+    //         data.filter((item) => {
+    //             return (
+    //                 (!searchParams.orderNumber ||
+    //                     item.order_number.includes(searchParams.orderNumber)) &&
+    //                 (!searchParams.status ||
+    //                     item.status === searchParams.status) &&
+    //                 (!searchParams.senderName ||
+    //                     item.sender_name.includes(searchParams.senderName)) &&
+    //                 (!searchParams.senderPhone ||
+    //                     item.sender_phone.includes(searchParams.senderPhone)) &&
+    //                 (!searchParams.senderAddress ||
+    //                     item.sender_address.includes(
+    //                         searchParams.senderAddress
+    //                     )) &&
+    //                 (!searchParams.receiverName ||
+    //                     item.receiver_name.includes(
+    //                         searchParams.receiverName
+    //                     )) &&
+    //                 (!searchParams.receiverPhone ||
+    //                     item.receiver_phone.includes(
+    //                         searchParams.receiverPhone
+    //                     )) &&
+    //                 (!searchParams.receiverAddress ||
+    //                     item.receiver_address.includes(
+    //                         searchParams.receiverAddress
+    //                     ))
+    //             )
+    //         })
+    //     )
+    // }, [data, searchParams])
+
+    const filteredData = orders.filter((item) => {
+        return (
+            (!searchParams.orderNumber ||
+                item.order_number.includes(searchParams.orderNumber)) &&
+            (!searchParams.status ||
+                item.status_name === searchParams.status) &&
+            (!searchParams.senderName ||
+                item.sender_info.name.includes(searchParams.senderName)) &&
+            (!searchParams.senderPhone ||
+                item.sender_info.phone.includes(searchParams.senderPhone)) &&
+            (!searchParams.senderAddress ||
+                item.sender_info.detail.includes(searchParams.senderAddress)) &&
+            (!searchParams.receiverName ||
+                item.receiver_info.name.includes(searchParams.receiverName)) &&
+            (!searchParams.receiverPhone ||
+                item.receiver_info.phone.includes(
+                    searchParams.receiverPhone
+                )) &&
+            (!searchParams.receiverAddress ||
+                item.receiver_info.detail.includes(
+                    searchParams.receiverAddress
+                ))
         )
-    }, [data, searchParams])
-
-
-    if (orderLoading) return <p>加载中...</p>
-    if (error) return <p>错误: {error}</p>
+    })
 
     // 所有搜索处理函数
     const handleSearch = (field: keyof typeof searchParams, value: string) => {
@@ -125,34 +147,16 @@ const LeaseTable: React.FC = () => {
         }))
     }
 
-    // const fetchLeases = async () => {
-    //     setLoading(true)
-    //     try {
-    //         const response = await getLeaseList()
-    //         setData(response)
-    //         setFilteredData(response)
-    //     } catch {
-    //         message.error("获取订单列表失败")
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }
-
-    // useEffect(() => {
-    //     fetchLeases()
-    // }, [])
-
     const handleDelete = async (id: number) => {
         try {
-            await deleteLease(id)
+            await dispatch(removeOrder(id)).unwrap()
             message.success("订单已删除")
-            fetchLeases()
         } catch {
             message.error("删除失败，请重试")
         }
     }
 
-    const handleEdit = (lease: LeaseType) => {
+    const handleEdit = (lease: OrderType) => {
         setEditingLease(lease)
         setModalVisible(true)
         form.setFieldsValue(lease)
@@ -162,17 +166,21 @@ const LeaseTable: React.FC = () => {
         try {
             const values = await form.validateFields()
             if (editingLease) {
-                await updateLease(editingLease.id, values)
+                await dispatch(
+                    updateExistingOrder({
+                        id: editingLease.id,
+                        updatedData: values,
+                    })
+                ).unwrap()
+                message.success("订单信息已更新")
+                setModalVisible(false)
             }
-            message.success("订单信息已更新")
-            fetchLeases()
-            setModalVisible(false)
         } catch {
             message.error("操作失败，请重试")
         }
     }
 
-    const columns: TableProps<LeaseType>["columns"] = [
+    const columns: TableProps<OrderType>["columns"] = [
         {
             title: "订单编号",
             dataIndex: "order_number",
@@ -181,8 +189,8 @@ const LeaseTable: React.FC = () => {
         },
         {
             title: "状态",
-            dataIndex: "status",
-            key: "status",
+            dataIndex: "status_name",
+            key: "status_name",
             fixed: "left",
             render: (status) => {
                 const statusColors: Record<string, string> = {
@@ -191,7 +199,8 @@ const LeaseTable: React.FC = () => {
                     已审核: "blue",
                     已发货: "purple",
                     已完成: "gold",
-                    已取消: "red",
+                    已取消: "gray",
+                    已驳回: "red",
                 }
                 return <Tag color={statusColors[status]}>{status}</Tag>
             },
@@ -201,37 +210,46 @@ const LeaseTable: React.FC = () => {
                 已审核: "blue",
                 已发货: "purple",
                 已完成: "gold",
-                已取消: "red",
+                已取消: "gray",
+                已驳回: "red",
             }).map(([status]) => ({
                 text: status,
                 value: status,
             })),
-            onFilter: (value, record) => record.status === value,
+            onFilter: (value, record) => record.status_name === value,
         },
-        { title: "价格", dataIndex: "price", key: "price" },
-        { title: "下单时间", dataIndex: "create_time", key: "create_time" },
-        { title: "取货时间", dataIndex: "delivery_time", key: "delivery_time" },
+        { title: "价格", dataIndex: "total_price", key: "total_price" },
+        // { title: "下单时间", dataIndex: "create_time", key: "create_time" },
+        // { title: "取货时间", dataIndex: "delivery_time", key: "delivery_time" },
         {
             title: "发件人地址",
-            dataIndex: "sender_address",
             key: "sender_address",
+            render: (_, record) => record.sender_info.detail,
         },
-        { title: "发件人姓名", dataIndex: "sender_name", key: "sender_name" },
-        { title: "发件人电话", dataIndex: "sender_phone", key: "sender_phone" },
+        {
+            title: "发件人姓名",
+            key: "sender_name",
+            render: (_, record) => record.sender_info.name,
+        },
+        {
+            title: "发件人电话",
+            key: "sender_phone",
+            render: (_, record) => record.sender_info.phone,
+        },
         {
             title: "收件人地址",
-            dataIndex: "receiver_address",
             key: "receiver_address",
+            render: (_, record) => record.receiver_info.detail,
         },
         {
             title: "收件人姓名",
-            dataIndex: "receiver_name",
             key: "receiver_name",
+            render: (_, record) => record.receiver_info.name,
         },
         {
             title: "收件人电话",
-            dataIndex: "receiver_phone",
             key: "receiver_phone",
+            render: (_, record) => record.receiver_info.phone,
         },
         {
             title: "操作",
@@ -241,7 +259,7 @@ const LeaseTable: React.FC = () => {
                 <Space size="middle">
                     <Button
                         type="primary"
-                        onClick={() => handleEdit(record as LeaseType)}
+                        onClick={() => handleEdit(record as OrderType)}
                     >
                         更新
                     </Button>
@@ -257,16 +275,8 @@ const LeaseTable: React.FC = () => {
         },
     ]
 
-    
-
-    // // 修改状态筛选逻辑
-    // const handleStatusFilter = () => {
-    //     const newStatus = searchParams.status === "已支付" ? "" : "已支付"
-    //     setSearchParams((prev) => ({
-    //         ...prev,
-    //         status: newStatus,
-    //     }))
-    // }
+    if (orderLoading) return <p>加载中...</p>
+    if (error) return <p>错误: {error}</p>
 
     return (
         <div>
@@ -391,16 +401,17 @@ const LeaseTable: React.FC = () => {
                             <Select.Option value="已发货">已发货</Select.Option>
                             <Select.Option value="已完成">已完成</Select.Option>
                             <Select.Option value="已取消">已取消</Select.Option>
+                            <Select.Option value="已驳回">已驳回</Select.Option>
                         </Select>
                     </Space>
                 </Col>
             </Row>
-            <Table<LeaseType>
+            <Table<OrderType>
+                rowKey={(record) => record.order_number} 
                 className={styles.customTable}
                 scroll={{ x: "max-content" }}
-                loading={loading}
+                loading={orderLoading}
                 size="middle"
-                rowKey="id"
                 columns={columns}
                 dataSource={filteredData}
                 pagination={{ pageSize: 7 }}
@@ -425,6 +436,7 @@ const LeaseTable: React.FC = () => {
                             <Select.Option value="已发货">已发货</Select.Option>
                             <Select.Option value="已完成">已完成</Select.Option>
                             <Select.Option value="已取消">已取消</Select.Option>
+                            <Select.Option value="已驳回">已驳回</Select.Option>
                         </Select>
                     </Form.Item>
                     <Form.Item name="order_note" label="订单备注">

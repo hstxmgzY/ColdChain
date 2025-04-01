@@ -77,10 +77,26 @@ func (r *OrderRepository) GetCategoryByID(categoryID uint) (*models.Category, er
 	return &category, nil
 }
 
+func (r *OrderRepository) GetModulesByOrderItemID(orderItemID uint) ([]models.Module, error) {
+	var modules []models.Module
+	err := r.db.Where("order_item_id = ?", orderItemID).Find(&modules).Error
+	if err != nil {
+		return nil, err
+	}
+	return modules, nil
+}
+
+
 func (r *OrderRepository) CreateOrder(order *models.RentalOrder) error {
 	err := r.db.Create(order).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (r *OrderRepository) GetAllOrderItems() ([]models.OrderItem, error) {
+	var orderItems []models.OrderItem
+	err := r.db.Find(&orderItems).Error
+	return orderItems, err
 }

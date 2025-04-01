@@ -17,19 +17,38 @@ type UserDTO struct {
 }
 
 type OrderItemDTO struct {
-	ID        uint       `json:"id"`
-	Quantity  int        `json:"quantity"`
-	UnitPrice float64    `json:"unit_price"`
-	Product   ProductDTO `json:"product"`
+	ID        uint            `json:"id"`
+	Quantity  int             `json:"quantity"`
+	UnitPrice float64         `json:"unit_price"`
+	Product   ProductDTO      `json:"product"`
+	Module    []ModuleInfoDTO `json:"module"`
 }
 
 type ProductDTO struct {
-	ID           uint    `json:"id"`
-	ProductName  string  `json:"product_name"`
-	CategoryName string  `json:"category_name"`
-	SpecWeight   float64 `json:"spec_weight"`
-	SpecVolume   float64 `json:"spec_volume"`
-	ImageURL     string  `json:"image_url"`
+	ID             uint    `json:"id"`
+	ProductName    string  `json:"product_name"`
+	CategoryName   string  `json:"category_name"`
+	MaxTemperature float64 `json:"max_temperature"`
+	MinTemperature float64 `json:"min_temperature"`
+	SpecWeight     float64 `json:"spec_weight"`
+	SpecVolume     float64 `json:"spec_volume"`
+	ImageURL       string  `json:"image_url"`
+}
+
+type ModuleStatus string
+
+const (
+	StatusAssigned   ModuleStatus = "assigned"   // 设备分配
+	StatusUnassigned ModuleStatus = "unassigned" // 设备未分配
+	StatusFaulty     ModuleStatus = "faulty"     // 设备故障
+)
+
+type ModuleInfoDTO struct {
+	ID                 uint         `json:"id"`
+	DeviceID           string       `json:"device_id"`
+	SettingTemperature float64      `json:"setting_temperature"`
+	Status             ModuleStatus `json:"status"`
+	IsEnabled          bool         `json:"is_enabled"`
 }
 
 type CreateOrderRequest struct {
@@ -48,5 +67,3 @@ type OrderItem struct {
 	UnitPrice float64 `json:"unit_price" binding:"required"`
 	ProductID uint    `json:"product_id" binding:"required"`
 }
-
-

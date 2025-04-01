@@ -403,7 +403,7 @@ const UserTable: React.FC = () => {
                 }
                 const roleMap: Record<string, string> = {
                     admin: "系统管理员",
-                    manager: "冷链运输管理员",
+                    manager: "冷链业务管理员",
                     individual: "个人用户",
                     merchant: "商户用户",
                 }
@@ -541,7 +541,7 @@ const UserTable: React.FC = () => {
                                 系统管理员
                             </Select.Option>
                             <Select.Option value="manager">
-                                冷链运输管理员
+                                冷链业务管理员
                             </Select.Option>
                             <Select.Option value="individual">
                                 个人用户
