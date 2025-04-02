@@ -27,6 +27,7 @@ import {
 import { AppDispatch } from "../../store"
 import { createStyles } from "antd-style"
 import { OrderType } from "../../interface/order/order"
+import LeaseDetailTable from "./leaseDetailTable"
 
 const useStyle = createStyles(({ css }) => ({
     customTable: css`
@@ -46,11 +47,9 @@ const { Search } = Input
 const { Text } = Typography
 
 const LeaseTable: React.FC = () => {
-    // const [filteredData, setFilteredData] = useState<OrderType[]>([])
     const [modalVisible, setModalVisible] = useState(false)
     const [editingLease, setEditingLease] = useState<OrderType | null>(null)
     const [form] = Form.useForm()
-    // const [loading, setLoading] = useState(false)
     const [searchParams, setSearchParams] = useState({
         orderNumber: "",
         status: "",
@@ -78,41 +77,6 @@ const LeaseTable: React.FC = () => {
             form.resetFields()
         }
     }, [modalVisible, editingLease, form])
-
-    // useEffect(() => {
-    //     if (!data) return // 防止 data 为空时报错
-
-    //     setFilteredData(
-    //         data.filter((item) => {
-    //             return (
-    //                 (!searchParams.orderNumber ||
-    //                     item.order_number.includes(searchParams.orderNumber)) &&
-    //                 (!searchParams.status ||
-    //                     item.status === searchParams.status) &&
-    //                 (!searchParams.senderName ||
-    //                     item.sender_name.includes(searchParams.senderName)) &&
-    //                 (!searchParams.senderPhone ||
-    //                     item.sender_phone.includes(searchParams.senderPhone)) &&
-    //                 (!searchParams.senderAddress ||
-    //                     item.sender_address.includes(
-    //                         searchParams.senderAddress
-    //                     )) &&
-    //                 (!searchParams.receiverName ||
-    //                     item.receiver_name.includes(
-    //                         searchParams.receiverName
-    //                     )) &&
-    //                 (!searchParams.receiverPhone ||
-    //                     item.receiver_phone.includes(
-    //                         searchParams.receiverPhone
-    //                     )) &&
-    //                 (!searchParams.receiverAddress ||
-    //                     item.receiver_address.includes(
-    //                         searchParams.receiverAddress
-    //                     ))
-    //             )
-    //         })
-    //     )
-    // }, [data, searchParams])
 
     const filteredData = orders.filter((item) => {
         return (
@@ -407,7 +371,14 @@ const LeaseTable: React.FC = () => {
                 </Col>
             </Row>
             <Table<OrderType>
-                rowKey={(record) => record.order_number} 
+                rowKey="id"
+                expandable={{
+                    expandedRowRender: (record) => <LeaseDetailTable record={record} />,
+                    rowExpandable: (record) => 
+                        record.order_items?.some(
+                            item => (item.module?.length ?? 0) > 0
+                        ),
+                }}
                 className={styles.customTable}
                 scroll={{ x: "max-content" }}
                 loading={orderLoading}

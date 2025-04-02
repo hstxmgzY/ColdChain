@@ -1,22 +1,17 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type OrderItem struct {
 	gorm.Model
-	ID        uint    `gorm:"primaryKey" json:"id"`
-	OrderID   uint    `gorm:"foreignKey:OrderID;not null" json:"order_id"`
-	ProductID uint    `gorm:"foreignKey:ProductID;not null" json:"product_id"`
-	Quantity  int     `gorm:"default:1" json:"quantity"`
-	UnitPrice float64 `gorm:"type:decimal(10,2);not null" json:"unit_price"`
-	Product   Product `gorm:"foreignKey:ProductID" json:"product"`
-	CreatedAt string  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt string  `gorm:"autoUpdateTime" json:"updated_at"`
+	ID        uint     `gorm:"primaryKey" json:"id"`
+	OrderID   uint     `gorm:"foreignKey:OrderID;not null" json:"order_id"`
+	ProductID uint     `gorm:"foreignKey:ProductID;not null" json:"product_id"`
+	Quantity  int      `gorm:"default:1" json:"quantity"`
+	UnitPrice float64  `gorm:"type:decimal(10,2);not null" json:"unit_price"`
+	Product   Product  `gorm:"foreignKey:ProductID" json:"product"`
+	Modules   []Module `json:"modules"`
 }
 
-type OrderItemModule struct {
-	gorm.Model
-	OrderItemID uint   `gorm:"foreignKey:OrderItemID;not null" json:"order_item_id"`
-	ModuleID    uint   `gorm:"foreignKey:ModuleID;not null" json:"module_id"`
-	Module      Module `gorm:"foreignKey:ModuleID"`
-}

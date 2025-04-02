@@ -26,16 +26,21 @@ func (r *ModuleRepository) FindAvailableModules(quantity int) ([]models.Module, 
 
 // 分配模块给订单项
 func (r *ModuleRepository) AssignModulesToOrderItem(orderItem models.OrderItem, modules []models.Module) error {
-	tx := r.db.Begin()
 
 	for _, module := range modules {
-		module.OrderItemID = orderItem.ID
+		module.OrderItemID = &orderItem.ID
 		module.Status = "assigned"
-		if err := tx.Save(&module).Error; err != nil {
-			tx.Rollback()
-			return err
+		if err := r.db.Save(&module).Error; err != nil {
+			return handleDBError(err)
 		}
 	}
 
-	return tx.Commit().Error
+	return nil
+}
+
+func (r *ModuleRepository) CreateModule(module *models.Module) error {
+	if err := r.db.Create(module).Error; err != nil {
+		return handleDBError(err)
+	}
+	return nil
 }

@@ -14,6 +14,15 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	return &OrderRepository{db: db}
 }
 
+func (r *OrderRepository) Transaction(fn func(tx *gorm.DB) error) error {
+	tx := r.db.Begin()
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
+}
+
 func (r *OrderRepository) GetOrderByID(orderID uint) (*models.RentalOrder, error) {
 	var order models.RentalOrder
 
@@ -86,7 +95,6 @@ func (r *OrderRepository) GetModulesByOrderItemID(orderItemID uint) ([]models.Mo
 	return modules, nil
 }
 
-
 func (r *OrderRepository) CreateOrder(order *models.RentalOrder) error {
 	err := r.db.Create(order).Error
 	if err != nil {
@@ -99,4 +107,54 @@ func (r *OrderRepository) GetAllOrderItems() ([]models.OrderItem, error) {
 	var orderItems []models.OrderItem
 	err := r.db.Find(&orderItems).Error
 	return orderItems, err
+}
+
+func (r *OrderRepository) CreateOrderItems(orderItems []models.OrderItem) error {
+	err := r.db.Create(&orderItems).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OrderRepository) UpdateOrder(order *models.RentalOrder) error {
+	err := r.db.Save(order).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OrderRepository) UpdateStatus(orderID, statusID uint) error {
+	err := r.db.Table("rental_orders").Where("id = ?", orderID).Update("status_id", statusID).Error
+	if err != nil {
+		return handleDBError(err)
+	}
+	return nil
+}
+
+func (r *OrderRepository) GetOrederStatusIDByName(statusName string) (uint, error) {
+	var orderStatus models.OrderStatus
+	err := r.db.Where("status_name = ?", statusName).First(&orderStatus).Error
+	if err != nil {
+		return 0, err
+	}
+	return orderStatus.ID, nil
+}
+
+func (r *OrderRepository) GetCategoryIDByName(categoryName string) (uint, error) {
+	var category models.Category
+	err := r.db.Where("category_name = ?", categoryName).First(&category).Error
+	if err != nil {
+		return 0, err
+	}
+	return category.ID, nil
+}
+
+func (r *OrderRepository) CreateProduct(product *models.Product) error {
+	err := r.db.Create(product).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

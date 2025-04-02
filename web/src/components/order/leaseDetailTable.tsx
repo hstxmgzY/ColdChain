@@ -1,7 +1,9 @@
 import React from "react"
 import { Table, Tag, Popconfirm, message } from "antd"
-import { ColdModuleType } from "../../interface/resource/coldModule.ts"
-import { ReviewOrderType } from "../../interface/order/review.ts"
+import {
+    OrderType,
+    OrderItemType,
+} from "../../interface/order/order"
 
 const confirm = (e?: React.MouseEvent<HTMLElement>) => {
     console.log(e)
@@ -14,19 +16,25 @@ const cancel = (e?: React.MouseEvent<HTMLElement>) => {
 }
 
 interface LeaseDetailTableProps {
-    record: ReviewOrderType
+    record: OrderType
 }
 
 const LeaseDetailTable: React.FC<LeaseDetailTableProps> = ({ record }) => {
+    console.log("当前记录:", record)
+    console.log("订单项:", record.order_items)
+    console.log("产品信息:", record.order_items?.[0]?.product)
+
     const columns = [
         {
             title: "拟分配冷链模块编号",
-            dataIndex: "id",
-            key: "id",
+            render: (_: unknown, record: OrderItemType) => {
+                return record.module?.[0]?.device_id || "-"
+            },
+            key: "moduleNumber",
         },
         {
             title: "冷链模块开关",
-            render: (_: unknown, record: ColdModuleType) => (
+            render: (_: unknown, record: OrderItemType) => (
                 <Popconfirm
                     title="关闭冷链模块"
                     description="你确定要关闭这个冷链模块吗?"
@@ -36,10 +44,10 @@ const LeaseDetailTable: React.FC<LeaseDetailTableProps> = ({ record }) => {
                     cancelText="取消"
                 >
                     <Tag
-                        color={record.isEnabled ? "green" : "red"}
+                        color={record.module?.[0]?.isEnabled ? "green" : "red"}
                         className="cursor-pointer"
                     >
-                        {record.isEnabled ? "开启" : "关闭"}
+                        {record.module?.[0]?.isEnabled ? "开启" : "关闭"}
                     </Tag>
                 </Popconfirm>
             ),
@@ -47,50 +55,66 @@ const LeaseDetailTable: React.FC<LeaseDetailTableProps> = ({ record }) => {
         },
         {
             title: "产品名称",
-            dataIndex: ["product", "productName"],
+            render: (_: unknown, record: OrderItemType) =>
+                record.product?.product_name || "-",
             key: "productName",
         },
         {
             title: "产品类别",
-            render: (_: unknown, record: ColdModuleType) => (
-                <Tag color="#87d068">{record.product?.category}</Tag>
+            render: (_: unknown, record: OrderItemType) => (
+                <Tag color="#87d068">
+                    {record.product?.category_name || "未知"}
+                </Tag>
             ),
             key: "category",
         },
         {
             title: "产品重量(kg)",
-            dataIndex: ["product", "weight"],
+            render: (_: unknown, record: OrderItemType) =>
+                record.product?.spec_weight || "-",
             key: "weight",
         },
         {
             title: "产品体积(m³)",
-            dataIndex: ["product", "volume"],
+            render: (_: unknown, record: OrderItemType) =>
+                record.product?.spec_volume || "-",
             key: "volume",
         },
         {
             title: "温度范围 (°C)",
-            render: (_: unknown, record: ColdModuleType) =>
-                `${record.minTemperature} ~ ${record.maxTemperature}`,
+            render: (_: unknown, record: OrderItemType) => {
+                const product = record.product
+                if (!product) return "-"
+                return `${product.min_temperature} ~ ${product.max_temperature}`
+            },
             key: "temperatureRange",
         },
         {
             title: "状态",
-            render: (_: unknown, record: ColdModuleType) =>
-                record.status === "待分配" ? (
-                    <Tag color="blue">待分配</Tag>
-                ) : (
-                    <Tag color="green">已分配</Tag>
-                ),
-            dataIndex: "status",
+            render: (_: unknown, record: OrderItemType) => {
+                const moduleStatusMap = {
+                    assigned: <Tag color="blue">已分配</Tag>,
+                    unassigned: <Tag color="green">未分配</Tag>,
+                    faulty: <Tag color="red">故障</Tag>,
+                }
+                const status = record.module?.[0]?.status as
+                    | keyof typeof moduleStatusMap
+                    | undefined
+                return status ? moduleStatusMap[status] : <Tag>未知状态</Tag>
+            },
             key: "status",
         },
     ]
 
     return (
-        <Table
+        <Table<OrderItemType>
             size="small"
             columns={columns}
-            dataSource={record.coldModules}
+            dataSource={record.order_items.map((item) => ({
+                ...item,
+                key: item.id,
+            }))}
+            rowKey="id"
             pagination={false}
         />
     )

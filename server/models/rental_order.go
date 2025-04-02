@@ -18,6 +18,4 @@ type RentalOrder struct {
 	OrderItems   []OrderItem    `gorm:"foreignKey:OrderID" json:"order_items"`
 	OrderStatus  OrderStatus    `gorm:"foreignKey:StatusID" json:"status"`
 	User         User           `gorm:"foreignKey:UserID" json:"user"`
-	CreatedAt    datatypes.Date `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt    datatypes.Date `gorm:"autoUpdateTime" json:"updated_at"`
 }

@@ -1,6 +1,7 @@
 package dto
 
 type OrderDTO struct {
+	ID		  uint           `json:"id"`
 	OrderNumber  string         `json:"order_number"`
 	TotalPrice   float64        `json:"total_price"`
 	StatusName   string         `json:"status_name"`
@@ -52,18 +53,42 @@ type ModuleInfoDTO struct {
 }
 
 type CreateOrderRequest struct {
-	OrderNumber  string      `json:"order_number" binding:"required"`
-	TotalPrice   float64     `json:"total_price" binding:"required"`
-	StatusID     uint        `json:"status_id" binding:"required"`
-	SenderInfo   interface{} `json:"sender_info" binding:"required"`
-	ReceiverInfo interface{} `json:"receiver_info" binding:"required"`
-	OrderNote    string      `json:"order_note"`
-	OrderItems   []OrderItem `json:"order_items" binding:"required"`
+	UserID       uint                   `json:"user_id" binding:"required"`
+	OrderNumber  string                 `json:"order_number" binding:"required"`
+	TotalPrice   float64                `json:"total_price" binding:"required"`
+	StatusID     uint                   `json:"status_id" binding:"required"`
+	SenderInfo   map[string]interface{} `json:"sender_info" binding:"required"`
+	ReceiverInfo map[string]interface{} `json:"receiver_info" binding:"required"`
+	OrderNote    string                 `json:"order_note"`
+	OrderItems   []OrderItem            `json:"order_items" binding:"required"`
 }
 
 type OrderItem struct {
 	ID        uint    `json:"id"`
 	Quantity  int     `json:"quantity" binding:"required"`
 	UnitPrice float64 `json:"unit_price" binding:"required"`
-	ProductID uint    `json:"product_id" binding:"required"`
+	Product   Product `json:"product" binding:"required"`
+}
+
+type Product struct {
+	ProductName    string  `json:"product_name" binding:"required"`
+	CategoryName   string  `json:"category_name" binding:"required"`
+	MaxTemperature float64 `json:"max_temperature" binding:"required"`
+	MinTemperature float64 `json:"min_temperature" binding:"required"`
+	SpecWeight     float64 `json:"spec_weight" binding:"required"`
+	SpecVolume     float64 `json:"spec_volume" binding:"required"`
+	ImageURL       string  `json:"image_url" binding:"required"`
+}
+
+type UpdateOrderRequest struct {
+	OrderNumber  *string  `json:"order_number" binding:"required"`
+	TotalPrice   *float64 `json:"total_price" binding:"required"`
+	StatusID     *uint    `json:"status_id" binding:"required"`
+	SenderInfo   *string  `json:"sender_info" binding:"required"`
+	ReceiverInfo *string  `json:"receiver_info" binding:"required"`
+	OrderNote    *string  `json:"order_note"`
+}
+
+type AddModuleRequest struct {
+	DeviceID string `json:"device_id" binding:"required"`
 }

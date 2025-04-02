@@ -3,10 +3,14 @@ package controllers
 import (
 	"coldchain/dao"
 	"coldchain/dto"
+	"coldchain/models"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -49,6 +53,7 @@ func (c *OrderController) GetOrderDetail(ctx *gin.Context) {
 
 	// 组装 DTO
 	response := dto.OrderDTO{
+		ID:          order.ID,
 		OrderNumber:  order.OrderNumber,
 		TotalPrice:   order.TotalPrice,
 		StatusName:   statusName,
@@ -135,6 +140,7 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 		}
 
 		response := dto.OrderDTO{
+			ID:          order.ID,
 			OrderNumber:  order.OrderNumber,
 			TotalPrice:   order.TotalPrice,
 			StatusName:   statusName,
@@ -214,55 +220,295 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 	}
 
 	// 验证用户是否存在
-	user, err := c.userRepo.GetUserByID(req.UserID)
+	_, err := c.userRepo.GetUserByID(req.UserID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
 		return
 	}
 
-	// 创建订单
-	order := dao.RentalOrder{
-		UserID:       user.ID,
-		OrderNumber:  req.OrderNumber,
-		StatusID:     req.StatusID,
-		SenderInfo:   req.SenderInfo,
-		ReceiverInfo: req.ReceiverInfo,
-		OrderNote:    req.OrderNote,
+	sender_info, err := json.Marshal(req.SenderInfo)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "发件人信息格式错误"})
+		return
+	}
+	receiver_info, err := json.Marshal(req.ReceiverInfo)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "收件人信息格式错误"})
+		return
 	}
 
-	if err := c.orderRepo.CreateOrder(&order); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
+	order := models.RentalOrder{
+		OrderNumber:  req.OrderNumber,
+		TotalPrice:   req.TotalPrice,
+		StatusID:     req.StatusID,
+		SenderInfo:   sender_info,
+		ReceiverInfo: receiver_info,
+		OrderNote:    req.OrderNote,
+		UserID:       req.UserID,
+	}
+
+	err = c.orderRepo.Transaction(func(tx *gorm.DB) error {
+		orderTxn := dao.NewOrderRepository(tx)
+		if err := orderTxn.CreateOrder(&order); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
+			return err
+		}
+
+		orderItems := make([]models.OrderItem, 0)
+
+		for _, item := range req.OrderItems {
+			CategoryID, err := orderTxn.GetCategoryIDByName(item.Product.CategoryName)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取产品分类失败"})
+				return err
+			}
+
+			product := &models.Product{
+				ProductName:    item.Product.ProductName,
+				CategoryID:     CategoryID,
+				MaxTemperature: item.Product.MaxTemperature,
+				MinTemperature: item.Product.MinTemperature,
+				SpecWeight:     item.Product.SpecWeight,
+				SpecVolume:     item.Product.SpecVolume,
+				ImageURL:       item.Product.ImageURL,
+			}
+
+			err = orderTxn.CreateProduct(product)
+			if err != nil {
+				// 如果产品已存在，则不创建新产品
+				if err != gorm.ErrDuplicatedKey {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建产品失败"})
+					return err
+				}
+			}
+
+			orderItem := models.OrderItem{
+				Quantity:  item.Quantity,
+				UnitPrice: item.UnitPrice,
+				OrderID:   order.ID,
+				ProductID: product.ID,
+			}
+			orderItems = append(orderItems, orderItem)
+		}
+
+		if err := orderTxn.CreateOrderItems(orderItems); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单明细失败"})
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"message": "订单创建成功", "order_id": order.ID})
 }
 
-// AllocateColdChainModules 处理冷链模块分配
-func (c *OrderController) AllocateColdChainModules(ctx *gin.Context) {
-	orderItems, err := c.orderRepo.GetAllOrderItems()
+func (c *OrderController) GetOrderStatus(ctx *gin.Context) {
+	orderID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取订单项"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的订单ID"})
 		return
 	}
 
+	statusName, err := c.orderRepo.GetOrderStatusName(uint(orderID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": statusName})
+}
+func (c *OrderController) UpdateOrder(ctx *gin.Context) {
+	var req dto.UpdateOrderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	orderID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的订单ID"})
+		return
+	}
+
+	order, err := c.orderRepo.GetOrderByID(uint(orderID))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
+		return
+	}
+
+	if req.TotalPrice != nil {
+		order.TotalPrice = *req.TotalPrice
+	}
+	if req.OrderNumber != nil {
+		order.OrderNumber = *req.OrderNumber
+	}
+	if req.StatusID != nil {
+		order.StatusID = *req.StatusID
+	}
+	if req.SenderInfo != nil {
+		senderInfoJSON, err := json.Marshal(*req.SenderInfo)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "发件人信息格式错误"})
+			return
+		}
+		order.SenderInfo = datatypes.JSON(senderInfoJSON)
+	}
+	if req.ReceiverInfo != nil {
+		receiverInfoJSON, err := json.Marshal(*req.ReceiverInfo)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "收件人信息格式错误"})
+			return
+		}
+		order.ReceiverInfo = datatypes.JSON(receiverInfoJSON)
+	}
+	if req.OrderNote != nil {
+		order.OrderNote = *req.OrderNote
+	}
+
+	if err := c.orderRepo.UpdateOrder(order); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新订单失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "订单更新成功"})
+}
+
+// AllocateColdChainModules 处理冷链模块分配
+func (c *OrderController) AllocateColdChainModules(ctx *gin.Context, tx *gorm.DB, orderItems []models.OrderItem) bool {
+	moduleTxn := dao.NewModuleRepository(tx)
+
 	for _, orderItem := range orderItems {
-		availableModules, err := c.moduleRepo.FindAvailableModules(orderItem.Quantity)
+		availableModules, err := moduleTxn.FindAvailableModules(orderItem.Quantity)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "查找可用冷链箱失败"})
-			return
+			return false
 		}
 
 		if len(availableModules) < orderItem.Quantity {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "可用冷链箱数量不足"})
-			return
+			return false
 		}
 
-		if err := c.moduleRepo.AssignModulesToOrderItem(orderItem, availableModules); err != nil {
+		if err := moduleTxn.AssignModulesToOrderItem(orderItem, availableModules); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "冷链箱分配失败"})
-			return
+			return false
 		}
 	}
+	return true
+}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "冷链箱分配成功"})
+func (c *OrderController) AcceptOrder(ctx *gin.Context) {
+	orderID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的订单ID"})
+		return
+	}
+	err = c.orderRepo.Transaction(func(tx *gorm.DB) error {
+		orderTxn := dao.NewOrderRepository(tx)
+		order, err := orderTxn.GetOrderByID(uint(orderID))
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
+			return err
+		}
+
+		StatusName, err := orderTxn.GetOrderStatusName(order.StatusID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+			return err
+		}
+
+		if StatusName != "已支付" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "订单状态不允许接收"})
+			return err
+		}
+
+		StatusID, err := orderTxn.GetOrederStatusIDByName("已审核")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+			return err
+		}
+
+		if err := orderTxn.UpdateStatus(order.ID, StatusID); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新订单失败"})
+			return err
+		}
+
+		if !c.AllocateColdChainModules(ctx, tx, order.OrderItems) {
+			return fmt.Errorf("冷链模块分配失败")
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "订单已接收"})
+}
+
+func (c *OrderController) RejectOrder(ctx *gin.Context) {
+	orderID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的订单ID"})
+		return
+	}
+	err = c.orderRepo.Transaction(func(tx *gorm.DB) error {
+		orderTxn := dao.NewOrderRepository(tx)
+		order, err := orderTxn.GetOrderByID(uint(orderID))
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
+			return err
+		}
+
+		StatusName, err := orderTxn.GetOrderStatusName(order.StatusID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+			return err
+		}
+
+		if StatusName != "已支付" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "订单状态不允许拒绝"})
+			return err
+		}
+
+		StatusID, err := orderTxn.GetOrederStatusIDByName("已驳回")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+			return err
+		}
+
+		if err := orderTxn.UpdateStatus(order.ID, StatusID); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新订单失败"})
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "订单已驳回"})
+}
+
+func (c *OrderController) AddModule(ctx *gin.Context) {
+	var req dto.AddModuleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	module := models.Module{
+		DeviceID:    req.DeviceID,
+		Status:      models.StatusUnassigned,
+		IsEnabled:   false,
+		OrderItemID: nil,
+	}
+
+	if err := c.moduleRepo.CreateModule(&module); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建模块失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"message": "模块创建成功", "module_id": module.ID})
 }

@@ -14,14 +14,13 @@ import {
     ShopOutlined,
     CloseCircleOutlined,
     CheckCircleOutlined,
-    ArrowRightOutlined,
     EnvironmentOutlined,
 } from "@ant-design/icons"
-import { ReviewOrderType } from "../../interface/order/review"
+import { OrderType } from "../../interface/order/order"
 
 interface ReviewModalProps {
     visible: boolean
-    order: ReviewOrderType | null
+    order: OrderType | null
     type: "approve" | "reject"
     rejectReason: string
     onCancel: () => void
@@ -96,25 +95,42 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
             ]}
             width={800}
             destroyOnClose
-            bodyStyle={{ padding: "24px 32px" }}
+            styles={{ body: { padding: 20 } }}
         >
             {order && (
                 <div className="space-y-12">
                     {/* 用户信息区块 */}
                     <div className="p-4 rounded-lg mb-14">
                         <div className="flex items-center gap-3">
-                            {order.userType === "merchant" ? (
+                            {order.user.role_name === "merchant" && (
                                 <>
                                     <ShopOutlined className="text-xl text-primary" />
                                     <span className="text-base font-medium">
                                         企业用户
                                     </span>
                                 </>
-                            ) : (
+                            )}
+                            {order.user.role_name === "individual" && (
                                 <>
                                     <IdcardOutlined className="text-xl text-primary" />
                                     <span className="text-base font-medium">
                                         个人用户
+                                    </span>
+                                </>
+                            )}
+                            {order.user.role_name === "admin" && (
+                                <>
+                                    <IdcardOutlined className="text-xl text-primary" />
+                                    <span className="text-base font-medium">
+                                        系统管理员
+                                    </span>
+                                </>
+                            )}
+                            {order.user.role_name === "manager" && (
+                                <>
+                                    <IdcardOutlined className="text-xl text-primary" />
+                                    <span className="text-base font-medium">
+                                        冷链业务管理员
                                     </span>
                                 </>
                             )}
@@ -124,23 +140,25 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                             bordered
                             size="small"
                             column={2}
-                            labelStyle={{
-                                width: 100,
-                                background: token.colorFillAlter,
+                            styles={{
+                                label: {
+                                    width: 100,
+                                    background: token.colorFillAlter,
+                                },
                             }}
                         >
-                            {order.userType === "merchant" ? (
+                            {order.user.role_name === "merchant" ? (
                                 <>
                                     <Descriptions.Item label="企业名称">
                                         <span className="text-gray-800">
-                                            {order.companyName}
+                                            {order.user.username}
                                         </span>
                                     </Descriptions.Item>
                                 </>
                             ) : (
                                 <Descriptions.Item label="用户姓名">
                                     <span className="text-gray-800">
-                                        {order.userName}
+                                        {order.user.username}
                                     </span>
                                 </Descriptions.Item>
                             )}
@@ -150,30 +168,44 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                     <div className="h-4"> </div>
 
                     {/* 配送路线区块 */}
+                    {/* 配送路线区块 */}
                     <div className="p-4 rounded-lg">
                         <Steps
                             progressDot
-                            current={0}
-                            items={order.route.map((point, index) => ({
-                                title: (
-                                    <div className="flex items-center flex-col gap-2">
-                                        <div className="w-5 flex justify-center">
-                                            <EnvironmentOutlined className="text-sm" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium">
-                                                {point}
+                            current={-1} // 不显示当前进度（纯展示用）
+                            items={[
+                                // 显式定义始发地和终点地
+                                {
+                                    title: (
+                                        <div className="flex items-center flex-col gap-2">
+                                            <div className="w-5 flex justify-center">
+                                                <EnvironmentOutlined className="text-sm" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium">
+                                                    {order.sender_info.detail}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ),
-                                description:
-                                    index === 0
-                                        ? "始发地"
-                                        : index === order.route.length - 1
-                                          ? "终点地"
-                                          : "",
-                            }))}
+                                    ),
+                                    description: "始发地",
+                                },
+                                {
+                                    title: (
+                                        <div className="flex items-center flex-col gap-2">
+                                            <div className="w-5 flex justify-center">
+                                                <EnvironmentOutlined className="text-sm" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium">
+                                                    {order.receiver_info.detail}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ),
+                                    description: "终点地",
+                                },
+                            ]}
                         />
                     </div>
 
