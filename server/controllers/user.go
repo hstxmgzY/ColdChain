@@ -30,6 +30,27 @@ func NewUserController(db *gorm.DB) *UserController {
 	}
 }
 
+func (c *UserController) Login(ctx *gin.Context) {
+	var req dto.LoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := c.userRepo.GetUserByPhone(req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "登录成功"})
+}
+
 // 处理用户列表
 func (c *UserController) GetUsers(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))

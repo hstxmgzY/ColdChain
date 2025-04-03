@@ -30,3 +30,8 @@ type UpdateUserRequest struct {
 	Role     *string    `json:"role"`
 	Address  *[]Address `json:"address" binding:"omitempty,dive"` // 允许更新地址数组
 }
+
+type LoginRequest struct {
+	Phone    string `json:"phone" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
+}

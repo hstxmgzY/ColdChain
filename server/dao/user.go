@@ -33,6 +33,17 @@ func (r *UserRepository) GetUserByID(userID uint) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) GetUserByPhone(phone string) (*models.User, error) {
+	var user models.User
+	if err := r.db.Where("phone = ?", phone).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) { // GORM v2 使用 errors.Is()
+			return nil, errors.New("用户不存在")
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 // 获取带角色的用户
 func (r *UserRepository) GetUserWithRole(userID uint) (*models.User, error) {
 	var user models.User
