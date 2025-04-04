@@ -40,8 +40,11 @@ func Router() *gin.Engine {
 	{
 		userGroup.GET("/list", userCtrl.GetUsers)
 		userGroup.POST("/add", userCtrl.CreateUser)
+		userGroup.GET("/:id", userCtrl.GetUserByID)
 		userGroup.PUT("/update/:id", userCtrl.UpdateUser)
 		userGroup.DELETE("/delete/:id", userCtrl.DeleteUser)
+		userGroup.POST("/login", userCtrl.Login)
+		userGroup.GET("/captcha", userCtrl.CaptchaGenerate)
 	}
 
 	// 初始化车辆控制器

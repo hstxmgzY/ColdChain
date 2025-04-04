@@ -32,6 +32,13 @@ type UpdateUserRequest struct {
 }
 
 type LoginRequest struct {
-	Phone    string `json:"phone" binding:"required"`
-	Password string `json:"password" binding:"required,min=8"`
+	Phone         string `json:"phone" binding:"required"`
+	Password      string `json:"password" binding:"required,min=8"`
+	CaptchaID     string `json:"captcha_id" binding:"required"`
+	CaptchaAnswer string `json:"captcha_answer" binding:"required"`
+}
+
+type CaptchaResponse struct {
+	Id  string `json:"id"`
+	Img string `json:"img"`
 }

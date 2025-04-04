@@ -5,12 +5,14 @@ import (
 	"coldchain/database"
 	"coldchain/dto"
 	"coldchain/models"
+	"coldchain/pkg/jwt"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mojocn/base64Captcha"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -28,6 +30,34 @@ func NewUserController(db *gorm.DB) *UserController {
 	return &UserController{
 		userRepo: dao.NewUserRepository(database.Db),
 	}
+}
+
+func (c *UserController) CaptchaGenerate(ctx *gin.Context) {
+	height, _ := strconv.Atoi(ctx.DefaultQuery("height", "200"))
+	width, _ := strconv.Atoi(ctx.DefaultQuery("width", "50"))
+
+	captchaGen := base64Captcha.NewCaptcha(&base64Captcha.DriverDigit{
+		Height:   height,
+		Width:    width,
+		Length:   4,
+		MaxSkew:  0.7,
+		DotCount: 1,
+	}, base64Captcha.DefaultMemStore)
+
+	id, b64s, _, err := captchaGen.Generate()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "验证码生成失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.CaptchaResponse{
+		Id:  id,
+		Img: b64s,
+	})
+}
+
+func (c *UserController) captchaVerify(id, ans string) bool {
+	return base64Captcha.DefaultMemStore.Verify(id, ans, true)
 }
 
 func (c *UserController) Login(ctx *gin.Context) {
@@ -48,7 +78,47 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
+	if !c.captchaVerify(req.CaptchaID, req.CaptchaAnswer) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "验证码错误"})
+		return
+	}
+
+	auth, err := jwt.GenerateToken(uint32(user.ID), uint32(user.RoleID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "生成token失败"})
+		return
+	}
+
+	ctx.Header("Authorization", "Bearer "+auth)
 	ctx.JSON(http.StatusOK, gin.H{"message": "登录成功"})
+}
+
+func (c *UserController) GetUserByID(ctx *gin.Context) {
+	userID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		return
+	}
+
+	user, err := c.userRepo.GetUserWithRole(uint(userID))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	var addresses []dto.Address
+	if err := json.Unmarshal(user.Address, &addresses); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role.RoleName,
+		Phone:    user.Phone,
+		Address:  addresses,
+	})
 }
 
 // 处理用户列表
@@ -65,7 +135,6 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 	var response []dto.UserResponse
 	for _, user := range users {
 		var addresses []dto.Address
-		fmt.Printf("User Address JSON: %s\n", user.Address)
 		if err := json.Unmarshal(user.Address, &addresses); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "地址解析失败"})
 			return
