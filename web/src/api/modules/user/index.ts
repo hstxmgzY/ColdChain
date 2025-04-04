@@ -13,7 +13,7 @@ export const addUser = (userData: {
     phone: string
     address?: object[]
 }) => {
-    console.log(userData)
+    // console.log(userData)
     return http.post("/user/add", userData)
 }
 
@@ -32,5 +32,26 @@ export const updateUser = (
 
 export const deleteUser = async (userId: number) => {
     const response = await http.delete(`/user/delete/${userId}`)
+    return response
+}
+
+
+export const getUserInfo = async (userId: number) => {
+    const response = await http.get<UserType>(`/user/${userId}`)
+    return response
+}
+
+export const getCaptcha = async () => {
+    const response = await http.get("/user/captcha")
+    return response
+}
+
+export const login = async (userData: {
+    phone: string
+    password: string
+    captchaId: string
+    captchaCode: string
+}) => {
+    const response = await http.post("/user/login", userData)
     return response
 }
