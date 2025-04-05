@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateUserInfo as updateUserAction } from '../store/reducers/user';
 import { RootState } from '../store';
 import { UserType } from '../interface/user/user';
+import { message } from 'antd';
 
 interface UserContextType {
   userInfo: UserType;
@@ -19,7 +20,8 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const userInfo = useSelector((state: RootState) => state.user.userInfo) || {} as UserType;
+  // const userInfo = useSelector((state: RootState) => state.user.userInfo) || {} as UserType;
+  const userInfo = useSelector((state: RootState) => state.user.userInfo); 
   const dispatch = useDispatch();
 
   const updateUserInfo = (info: UserType) => {
@@ -45,8 +47,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   // 实现登出方法
   const logout = () => {
-    // 清除用户信息
+    // 清除Redux中的用户信息
     dispatch({ type: 'user/clearUserInfo' });
+    // 清除localStorage中的token和用户信息
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+    // 重定向到欢迎页面
+    message.success('登出成功');
+    window.location.href = '/';
   };
 
   // 实现注册方法

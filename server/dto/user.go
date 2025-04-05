@@ -38,6 +38,11 @@ type LoginRequest struct {
 	CaptchaAnswer string `json:"captcha_answer" binding:"required"`
 }
 
+type LoginResponse struct {
+	UserID uint   `json:"user_id"`
+	Role   string `json:"role"`
+}
+
 type CaptchaResponse struct {
 	Id  string `json:"id"`
 	Img string `json:"img"`

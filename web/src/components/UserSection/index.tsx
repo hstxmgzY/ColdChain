@@ -1,17 +1,16 @@
-import React, { useEffect } from 'react'
-import { Typography, Divider, Dropdown, Avatar, message } from 'antd'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect } from "react"
+import { Typography, Divider, Dropdown, Avatar, message } from "antd"
+import { Link, useNavigate } from "react-router-dom"
 import {
   UserOutlined,
   LogoutOutlined,
   ProfileOutlined,
   AppstoreAddOutlined,
-} from '@ant-design/icons'
-import { http } from '../../api/request'
-import { useSelector, useDispatch } from 'react-redux'
-import { updateUserInfo, clearUserInfo } from '../../store/reducers/user'
-import { RootState } from '../../store'
-import './index.css'
+} from "@ant-design/icons"
+import { useSelector, useDispatch } from "react-redux"
+import { updateUserInfo, clearUserInfo } from "../../store/reducers/user"
+import { RootState } from "../../store"
+import "./index.css"
 
 const { Text } = Typography
 
@@ -21,7 +20,7 @@ const UserSection = () => {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem("token")
     if (token) {
       fetchUserInfo()
     }
@@ -29,45 +28,60 @@ const UserSection = () => {
 
   const fetchUserInfo = async () => {
     try {
-      const response = await http.get('/userInfo')
-      dispatch(updateUserInfo(response.data))
-    } catch (error: any) {
-      console.error('Failed to fetch user info:', error)
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        dispatch(clearUserInfo())
+      // 优先从 Redux 获取已存在的用户信息
+      if (userInfo?.user_id) return
+
+      // 尝试从 localStorage 恢复
+      const userInfoStr = localStorage.getItem("userInfo")
+      if (userInfoStr) {
+        const localUserInfo = JSON.parse(userInfoStr)
+        dispatch(updateUserInfo(localUserInfo))
+        return
       }
+
+      // 最后从 API 获取最新数据
+      // const response = await getUserById() // 假设可以直接获取当前用户
+      // if (response) {
+      //   dispatch(updateUserInfo(response))
+      //   localStorage.setItem("userInfo", JSON.stringify(response))
+      // }
+    } catch (error) {
+      // 清理无效数据
+      localStorage.removeItem("token")
+      localStorage.removeItem("userInfo")
+      dispatch(clearUserInfo())
     }
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo")
     dispatch(clearUserInfo())
-    message.success('Logout successful')
-    navigate('/')
+    message.success("Logout successful")
+    navigate("/")
   }
 
   const dropdownItems = [
     {
-      key: 'profile',
-      label: 'Profile',
+      key: "profile",
+      label: "Profile",
       icon: <ProfileOutlined />,
-      onClick: () => navigate('/profile'),
+      onClick: () => navigate("/profile"),
     },
     {
-      key: 'logout',
-      label: 'Logout',
+      key: "logout",
+      label: "Logout",
       icon: <LogoutOutlined />,
       onClick: handleLogout,
     },
   ]
 
-  if (userInfo?.role === 'admin') {
+  if (userInfo?.role === "admin") {
     dropdownItems.unshift({
-      key: 'manage',
-      label: 'Manage',
+      key: "manage",
+      label: "Manage",
       icon: <AppstoreAddOutlined />, // 管理选项的图标
-      onClick: () => navigate('/admin'), // 假设管理员管理页面路径为 /admin
+      onClick: () => navigate("/admin"), // 假设管理员管理页面路径为 /admin
     })
   }
 
@@ -79,12 +93,15 @@ const UserSection = () => {
           <Avatar
             icon={<UserOutlined />}
             style={{
-              backgroundColor: userInfo.role === 'admin' ? '#f56a00' : '#87d068',
+              backgroundColor:
+                userInfo.role === "admin" ? "#f56a00" : "#87d068",
             }}
           />
           <Text strong className="username">
-            {userInfo?.name}
-            {userInfo?.role === 'admin' && <span className="admin-badge">Admin</span>}
+            {userInfo?.username}
+            {userInfo?.role === "admin" && (
+              <span className="admin-badge">Admin</span>
+            )}
           </Text>
         </div>
       </Dropdown>
@@ -105,4 +122,3 @@ const UserSection = () => {
 }
 
 export default UserSection
-

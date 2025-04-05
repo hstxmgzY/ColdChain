@@ -7,28 +7,28 @@ export default [
         url: "/home/index",
     },
     {
-        path: "/screen",
+        path: "/home/screen",
         name: "screen",
         label: "可视化大屏",
         icon: "FundProjectionScreenOutlined",
         url: "/screen/index",
         children: [
             {
-                path: "/screen/alarm",
+                path: "/home/screen/alarm",
                 name: "alarm",
                 label: "警报信息",
                 icon: "AlertOutlined",
                 url: "/screen/alarm",
             },
             {
-                path: "/screen/equipment-stats",
+                path: "/home/screen/equipment-stats",
                 name: "equipmentStats",
                 label: "设备统计",
                 icon: "BarChartOutlined",
                 url: "/screen/equipmentStats",
             },
             {
-                path: "/screen/map",
+                path: "/home/screen/map",
                 name: "map",
                 label: "地图展示",
                 icon: "GlobalOutlined",
@@ -37,35 +37,35 @@ export default [
         ],
     },
     {
-        path: "/user",
+        path: "/home/user",
         name: "user",
         label: "用户管理",
         icon: "UserOutlined",
         url: "/user/index",
     },
     {
-        path: "/order",
+        path: "/home/order",
         name: "order",
         label: "运输订单管理",
         icon: "OrderedListOutlined",
         url: "/order/index",
         children: [
             {
-                path: "/order/review",
+                path: "/home/order/review",
                 name: "review",
                 label: "订单审核",
                 icon: "AuditOutlined",
                 url: "/order/review",
             },
             {
-                path: "/order/lease",
+                path: "/home/order/lease",
                 name: "lease",
                 label: "租赁订单管理",
                 icon: "ShoppingCartOutlined",
                 url: "/order/lease",
             },
             {
-                path: "/order/monitor",
+                path: "/home/order/monitor",
                 name: "monitor",
                 label: "实时监控",
                 icon: "VideoCameraOutlined",
@@ -73,7 +73,7 @@ export default [
             },
 
             {
-                path: "/order/tracking",
+                path: "/home/order/tracking",
                 name: "tracking",
                 label: "订单跟踪",
                 icon: "ControlOutlined",
@@ -82,21 +82,21 @@ export default [
         ],
     },
     {
-        path: "/resource",
+        path: "/home/resource",
         name: "resource",
         label: "运输资源管理",
         icon: "DatabaseOutlined",
         url: "/resource/index",
         children: [
             {
-                path: "/resource/dispatch",
+                path: "/home/resource/dispatch",
                 name: "dispatch",
                 label: "车辆调度管理",
                 icon: "ScheduleOutlined",
                 url: "/resource/dispatch",
             },
             {
-                path: "/resource/equipment",
+                path: "/home/resource/equipment",
                 name: "equipment",
                 label: "冷链设备管理",
                 icon: "ToolOutlined",
@@ -117,7 +117,7 @@ export default [
             //     url: "/resource/productTrans",
             // },
             {
-                path: "/resource/vehicle",
+                path: "/home/resource/vehicle",
                 name: "vehicle",
                 label: "冷链车辆管理",
                 icon: "CarOutlined",

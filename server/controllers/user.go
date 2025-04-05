@@ -40,7 +40,7 @@ func (c *UserController) CaptchaGenerate(ctx *gin.Context) {
 		Height:   height,
 		Width:    width,
 		Length:   4,
-		MaxSkew:  0.7,
+		MaxSkew:  0.2,
 		DotCount: 1,
 	}, base64Captcha.DefaultMemStore)
 
@@ -90,7 +90,7 @@ func (c *UserController) Login(ctx *gin.Context) {
 	}
 
 	ctx.Header("Authorization", "Bearer "+auth)
-	ctx.JSON(http.StatusOK, gin.H{"message": "登录成功"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "登录成功", "user_id": user.ID, "role": user.Role.RoleName})
 }
 
 func (c *UserController) GetUserByID(ctx *gin.Context) {
@@ -124,7 +124,7 @@ func (c *UserController) GetUserByID(ctx *gin.Context) {
 // 处理用户列表
 func (c *UserController) GetUsers(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
+	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "100"))
 
 	users, err := c.userRepo.ListUsers(page, size)
 	if err != nil {

@@ -6,3 +6,14 @@
     background-color: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
 }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.user-info .ant-typography {
+    margin-right: 8px;
+    font-weight: 500;
+}
