@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"coldchain/dao"
-	"coldchain/database"
-	"coldchain/dto"
-	"coldchain/models"
-	"coldchain/pkg/jwt"
+	"coldchain/common/jwt"
+	"coldchain/server/dao"
+	"coldchain/server/dto"
+	"coldchain/server/models"
+	database "coldchain/server/mysql"
 	"encoding/json"
 	"fmt"
 	"net/http"

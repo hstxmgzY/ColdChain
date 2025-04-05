@@ -1,21 +1,22 @@
 package logger
 
 import (
-	"github.com/sirupsen/logrus"
-	"time"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
+	"net/http"
 	"os"
 	"path"
 	"runtime/debug"
-	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 const (
-	standardFormat     = "2006-01-02"  
-    dateFormat     = "2006-01-02"       
-    timeFormat = "15:04:05"
+	standardFormat = "2006-01-02"
+	dateFormat     = "2006-01-02"
+	timeFormat     = "15:04:05"
 )
 
 func init() {
@@ -70,7 +71,7 @@ func setLogDir() {
 	if _, err := os.Stat("./runtime/log"); os.IsNotExist(err) {
 		err = os.MkdirAll("./runtime/log", 0777)
 		if err != nil {
-			panic(fmt.Errorf("create log dir '%s' error: %s", "./runtime/log",err))
+			panic(fmt.Errorf("create log dir '%s' error: %s", "./runtime/log", err))
 		}
 	}
 }
@@ -79,24 +80,24 @@ func setOutPutFile(level logrus.Level, logName string) {
 	setLogDir()
 
 	timeStr := time.Now().Format(dateFormat)
-	fileName := path.Join("./runtime/log", logName + "_" + timeStr + ".log")
+	fileName := path.Join("./runtime/log", logName+"_"+timeStr+".log")
 
 	var err error
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-    if err != nil {
-        fmt.Println("open file error", err)
-        return
-    }
+	if err != nil {
+		fmt.Println("open file error", err)
+		return
+	}
 	logrus.SetOutput(file)
 }
 
-func LoggerToFile() gin.LoggerConfig{
+func LoggerToFile() gin.LoggerConfig {
 	setLogDir()
 
 	timeStr := time.Now().Format(dateFormat)
-	fileName := path.Join("./runtime/log", "success_" + timeStr + ".log")
+	fileName := path.Join("./runtime/log", "success_"+timeStr+".log")
 
-	os.Stderr, _ =os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	os.Stderr, _ = os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 
 	return gin.LoggerConfig{
 		Formatter: func(params gin.LogFormatterParams) string {
@@ -114,8 +115,8 @@ func LoggerToFile() gin.LoggerConfig{
 	}
 }
 
-func Recover(ctx *gin.Context){
-	defer func(){
+func Recover(ctx *gin.Context) {
+	defer func() {
 		err := recover()
 		if err == nil {
 			return
@@ -133,7 +134,7 @@ func Recover(ctx *gin.Context){
 		f.WriteString(fmt.Sprintf("panic error time: %s\n", time_str))
 		f.WriteString(fmt.Sprintf("%s\n", err))
 		f.WriteString(fmt.Sprintf("stack trace from panic: %s\n", debug.Stack()))
-		ctx.JSON(http.StatusOK, gin.H {
+		ctx.JSON(http.StatusOK, gin.H{
 			"code":    500,
 			"message": fmt.Sprintf("%v", err),
 		})
@@ -141,6 +142,3 @@ func Recover(ctx *gin.Context){
 	}()
 	ctx.Next()
 }
-
-
-

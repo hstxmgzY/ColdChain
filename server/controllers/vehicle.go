@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"coldchain/dao"
-	"coldchain/dto"
-	"coldchain/models"
+	"coldchain/server/dao"
+	"coldchain/server/dto"
+	"coldchain/server/models"
 	"net/http"
 	"strconv"
 

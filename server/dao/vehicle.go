@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"coldchain/models"
+	"coldchain/server/models"
 	"errors"
 
 	"gorm.io/gorm"

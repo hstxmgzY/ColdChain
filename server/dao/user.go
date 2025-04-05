@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"coldchain/models"
-	"coldchain/pkg/logger"
+	"coldchain/common/logger"
+	"coldchain/server/models"
 	"errors"
 	"strings"
 

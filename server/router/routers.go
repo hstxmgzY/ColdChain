@@ -1,9 +1,9 @@
 package router
 
 import (
-	"coldchain/controllers"
-	"coldchain/database"
-	"coldchain/pkg/logger"
+	"coldchain/common/logger"
+	"coldchain/server/controllers"
+	database "coldchain/server/mysql"
 
 	"github.com/gin-gonic/gin"
 )
