@@ -39,7 +39,7 @@ export default function ProfilePage() {
       updateUserInfo(updatedUser)
       message.success("个人信息更新成功")
       setEditModalVisible(false)
-    } catch (error) {
+    } catch {
       message.error("更新失败，请重试")
     }
   }

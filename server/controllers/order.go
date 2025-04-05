@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/datatypes"
@@ -53,7 +54,7 @@ func (c *OrderController) GetOrderDetail(ctx *gin.Context) {
 
 	// 组装 DTO
 	response := dto.OrderDTO{
-		ID:          order.ID,
+		ID:           order.ID,
 		OrderNumber:  order.OrderNumber,
 		TotalPrice:   order.TotalPrice,
 		StatusName:   statusName,
@@ -140,7 +141,7 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 		}
 
 		response := dto.OrderDTO{
-			ID:          order.ID,
+			ID:           order.ID,
 			OrderNumber:  order.OrderNumber,
 			TotalPrice:   order.TotalPrice,
 			StatusName:   statusName,
@@ -237,12 +238,19 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 		return
 	}
 
+	delivery_date, err := time.Parse("2006-01-02 15:04", req.DeliveryDate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "交付日期格式错误"})
+		return
+	}
+
 	order := models.RentalOrder{
 		OrderNumber:  req.OrderNumber,
 		TotalPrice:   req.TotalPrice,
 		StatusID:     req.StatusID,
 		SenderInfo:   sender_info,
 		ReceiverInfo: receiver_info,
+		DeliveryDate: delivery_date,
 		OrderNote:    req.OrderNote,
 		UserID:       req.UserID,
 	}

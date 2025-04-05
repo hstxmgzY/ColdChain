@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -14,6 +16,7 @@ type RentalOrder struct {
 	TotalPrice   float64        `gorm:"type:decimal(12,2);not null" json:"total_price"`
 	SenderInfo   datatypes.JSON `gorm:"type:json;not null" json:"sender_info"`
 	ReceiverInfo datatypes.JSON `gorm:"type:json;not null" json:"receiver_info"`
+	DeliveryDate time.Time      `gorm:"size:10;not null;default:CURRENT_TIMESTAMP(3)" json:"delivery_date"`
 	OrderNote    string         `gorm:"size:255;" json:"order_note"`
 	OrderItems   []OrderItem    `gorm:"foreignKey:OrderID" json:"order_items"`
 	OrderStatus  OrderStatus    `gorm:"foreignKey:StatusID" json:"status"`

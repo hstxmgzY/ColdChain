@@ -1,7 +1,7 @@
 package dto
 
 type OrderDTO struct {
-	ID		  uint           `json:"id"`
+	ID           uint           `json:"id"`
 	OrderNumber  string         `json:"order_number"`
 	TotalPrice   float64        `json:"total_price"`
 	StatusName   string         `json:"status_name"`
@@ -59,6 +59,7 @@ type CreateOrderRequest struct {
 	StatusID     uint                   `json:"status_id" binding:"required"`
 	SenderInfo   map[string]interface{} `json:"sender_info" binding:"required"`
 	ReceiverInfo map[string]interface{} `json:"receiver_info" binding:"required"`
+	DeliveryDate string                 `json:"delivery_date" binding:"required"`
 	OrderNote    string                 `json:"order_note"`
 	OrderItems   []OrderItem            `json:"order_items" binding:"required"`
 }
