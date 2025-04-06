@@ -1,9 +1,10 @@
 import React from "react";
+import OrderDetail from "../../../components/orders/detail";
 
 const OrderDetailPage = () => {
     return (
         <div>
-            <h1>OrderDetailPage Page</h1>
+            <OrderDetail />
         </div>
     )
 }

@@ -1,11 +1,12 @@
 import React from "react";
+import OrderConfirm from "../../../components/orders/confirm";
 
-const OrderConfirmPage  = () => {
+const OrderConfirmPage = () => {
     return (
         <div>
-            <h1>OrderConfirmPage Page</h1>
+            <OrderConfirm />
         </div>
     )
 }
 
-export default OrderConfirmPage ;
+export default OrderConfirmPage;

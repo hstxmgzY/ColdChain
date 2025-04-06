@@ -4,10 +4,10 @@ import "github.com/spf13/viper"
 
 var (
 	CLICKHOUSE_IP       string = "127.0.0.1"
-	CLICKHOUSE_PORT     string = "8123"
+	CLICKHOUSE_PORT     string = "9000"
 	CLICKHOUSE_USER     string = "default"
-	CLICKHOUSE_PASSWORD string = "password"
-	CLICKHOUSE_DATABASE string = "default"
+	CLICKHOUSE_PASSWORD string = ""
+	CLICKHOUSE_DATABASE string = "coldchain"
 )
 
 func importConfig() {

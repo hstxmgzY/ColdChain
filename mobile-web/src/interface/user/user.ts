@@ -35,3 +35,11 @@ export interface CaptchaData {
     Id: string
     Img: string
 }
+
+export interface UserInfo {
+    user_id: number
+    username: string
+    role: string
+    phone: string
+    address: Address[]
+}

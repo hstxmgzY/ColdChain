@@ -20,8 +20,8 @@ const (
 )
 
 func init() {
-	logrus.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: standardFormat,
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableColors: false,
 	})
 	logrus.SetReportCaller(false)
 	logrus.SetLevel(logrus.InfoLevel)
@@ -65,6 +65,30 @@ func Panic(fields logrus.Fields, args ...interface{}) {
 func Trace(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.TraceLevel, "trace")
 	logrus.WithFields(fields).Trace(args...)
+}
+
+func Infof(format string, args ...interface{}) {
+	logrus.Infof(format, args...)
+}
+
+func Debugf(format string, args ...interface{}) {
+	logrus.Infof(format, args...)
+}
+
+func Warnf(format string, args ...interface{}) {
+	logrus.Warnf(format, args...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	logrus.Errorf(format, args...)
+}
+
+func Fatalf(format string, args ...interface{}) {
+	logrus.Fatalf(format, args...)
+}
+
+func Panicf(format string, args ...interface{}) {
+	logrus.Panicf(format, args...)
 }
 
 func setLogDir() {
@@ -122,7 +146,6 @@ func Recover(ctx *gin.Context) {
 			return
 		}
 		setLogDir()
-		fmt.Println("111")
 		time_str := time.Now().Format(dateFormat)
 		f, err_file := os.OpenFile("./runtime/log/runtime_fatal_"+time_str+".log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
 		if err_file != nil {

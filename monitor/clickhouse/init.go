@@ -1,11 +1,12 @@
 package clickhouse
 
 import (
+	"coldchain/common/logger"
 	"context"
-	"database/sql/driver"
 	"time"
 
 	clickhouseDriver "github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )
 
 var clickhouseConn driver.Conn
@@ -13,7 +14,8 @@ var clickhouseConn driver.Conn
 func InitDB() {
 	importConfig()
 	// Initialize ClickHouse connection
-	clickhouseConn, err := clickhouseDriver.Open(&clickhouseDriver.Options{
+	var err error
+	clickhouseConn, err = clickhouseDriver.Open(&clickhouseDriver.Options{
 		Addr: []string{CLICKHOUSE_IP + ":" + CLICKHOUSE_PORT},
 		Auth: clickhouseDriver.Auth{
 			Database: CLICKHOUSE_DATABASE,
@@ -29,6 +31,8 @@ func InitDB() {
 	if err := clickhouseConn.Ping(context.Background()); err != nil {
 		panic("Failed to ping ClickHouse: " + err.Error())
 	}
+
+	logger.Infof("ClickHouse connection established successfully")
 }
 
 func GetConn() driver.Conn {

@@ -1,9 +1,10 @@
 import React from "react";
+import OrderReview from "../../../components/orders/review";
 
 const OrderReviewPage = () => {
     return (
         <div>
-            <h1>OrderReviewPage Page</h1>
+            <OrderReview />
         </div>
     )
 }

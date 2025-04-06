@@ -1,9 +1,10 @@
 import React from "react";
+import OrderItemForm from "../../../../components/orders/create/item";
 
 const OrderItemsPage = () => {
     return (
         <div>
-            <h1>OrderItemsPage Page</h1>
+            <OrderItemForm />
         </div>
     )
 }

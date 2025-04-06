@@ -1,6 +1,12 @@
-package monitor
+package main
+
+import (
+	"coldchain/monitor/clickhouse"
+	"coldchain/monitor/router"
+)
 
 func main() {
-	monitor := NewMonitor()
-	monitor.ApiServer.Run(MONITOR_IP + ":" + MONITOR_PORT)
+	clickhouse.InitDB()
+	r := router.Router()
+	r.Run(MONITOR_IP + ":" + MONITOR_PORT)
 }

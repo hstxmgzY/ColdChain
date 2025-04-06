@@ -1,118 +1,130 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit"
+import { createOrder } from "../../api/modules/order/order"
+// import { RootState } from "../index"
 import {
-    getOrderList,
-    createOrder,
-    updateOrder,
-    deleteOrder,
-} from "../../api/modules/order/order"
-import { RootState } from "../index"
-import { OrderType } from "../../interface/order/order"
+    Order,
+    OrderItem,
+    ContactInfo,
+} from "../../interface/order/order"
+
+import { UserInfo } from "../../interface/user/user"
 
 interface OrderState {
-    orders: OrderType[]
+    order: Order
     loading: boolean
     error: string | null
 }
 
+// 初始化一个空 user
+const emptyUser: UserInfo = {
+    user_id: 0,
+    username: "",
+    phone: "",
+    role: "",
+    address: [],
+}
+
 const initialState: OrderState = {
-    orders: [],
+    order: {
+        sender_info: null,
+        receiver_info: null,
+        delivery_date: null,
+        order_note: "",
+        order_items: [],
+        user: emptyUser,
+    },
     loading: false,
     error: null,
 }
 
-export const fetchOrders = createAsyncThunk("orders/fetchOrders", async () => {
-    const response = await getOrderList()
-    // console.log("response", response);
-    return response
-})
-
-// 创建订单
-export const createNewOrder = createAsyncThunk(
-    "orders/createOrder",
-    async (orderData: Partial<OrderType>) => {
-        const response = await createOrder(orderData)
-        return response
-    }
-)
-
-// 更新订单
-export const updateExistingOrder = createAsyncThunk(
-    "orders/updateOrder",
-    async ({
-        id,
-        updatedData,
-    }: {
-        id: number
-        updatedData: Partial<OrderType>
-    }) => {
-        const response = await updateOrder(id, updatedData)
-        return response
-    }
-)
-
-// 删除订单
-export const removeOrder = createAsyncThunk(
-    "orders/deleteOrder",
-    async (id: number) => {
-        await deleteOrder(id)
-        return id
+// 可选：异步提交订单
+export const submitOrder = createAsyncThunk(
+    "order/submitOrder",
+    async (orderData: Order, { rejectWithValue }) => {
+        try {
+            const res = await createOrder(orderData)
+            return res
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data || "提交订单失败")
+        }
     }
 )
 
 const orderSlice = createSlice({
-    name: "orders",
+    name: "order",
     initialState,
-    reducers: {},
+    reducers: {
+        setSenderInfo(state, action: PayloadAction<ContactInfo>) {
+            state.order.sender_info = action.payload
+        },
+        setReceiverInfo(state, action: PayloadAction<ContactInfo>) {
+            state.order.receiver_info = action.payload
+        },
+        setDeliveryDate(state, action: PayloadAction<string>) {
+            state.order.delivery_date = action.payload
+        },
+        setOrderNote(state, action: PayloadAction<string>) {
+            state.order.order_note = action.payload
+        },
+        setUser(state, action: PayloadAction<UserInfo>) {
+            state.order.user = action.payload
+        },
+        addItem(state, action: PayloadAction<OrderItem>) {
+            state.order.order_items.push(action.payload)
+        },
+        removeItem(state, action: PayloadAction<number>) {
+            state.order.order_items.splice(action.payload, 1)
+        },
+        updateItem(
+            state,
+            action: PayloadAction<{ index: number; item: OrderItem }>
+        ) {
+            const { index, item } = action.payload
+            if (index >= 0 && index < state.order.order_items.length) {
+                state.order.order_items[index] = item
+            }
+        },
+        clearItems(state) {
+            state.order.order_items = []
+        },
+        clearAll(state) {
+            state.order = {
+                sender_info: null,
+                receiver_info: null,
+                delivery_date: null,
+                order_note: "",
+                order_items: [],
+                user: emptyUser,
+            }
+        },
+    },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchOrders.pending, (state) => {
+            .addCase(submitOrder.pending, (state) => {
                 state.loading = true
                 state.error = null
             })
-            .addCase(
-                fetchOrders.fulfilled,
-                (state, action: PayloadAction<OrderType[]>) => {
-                    state.loading = false
-                    state.orders = action.payload
-                }
-            )
-            .addCase(fetchOrders.rejected, (state, action) => {
+            .addCase(submitOrder.fulfilled, (state) => {
                 state.loading = false
-                state.error = action.error.message || "获取订单失败"
             })
-            // 创建订单
-            .addCase(
-                createNewOrder.fulfilled,
-                (state, action: PayloadAction<OrderType>) => {
-                    state.orders.push(action.payload)
-                }
-            )
-            // 更新订单
-            .addCase(
-                updateExistingOrder.fulfilled,
-                (state, action: PayloadAction<OrderType>) => {
-                    const index = state.orders.findIndex(
-                        (order) => order.id === action.payload.id
-                    )
-                    if (index !== -1) {
-                        state.orders[index] = action.payload
-                    }
-                }
-            )
-            // 删除订单
-            .addCase(
-                removeOrder.fulfilled,
-                (state, action: PayloadAction<number>) => {
-                    state.orders = state.orders.filter(
-                        (order) => order.id !== action.payload
-                    )
-                }
-            )
+            .addCase(submitOrder.rejected, (state, action) => {
+                state.loading = false
+                state.error = action.payload as string
+            })
     },
 })
 
-export default orderSlice.reducer
+export const {
+    setSenderInfo,
+    setReceiverInfo,
+    setDeliveryDate,
+    setOrderNote,
+    setUser,
+    addItem,
+    removeItem,
+    updateItem,
+    clearItems,
+    clearAll,
+} = orderSlice.actions
 
-export const selectOrders = (state: RootState) => state.orders.orders
-export const selectOrderLoading = (state: RootState) => state.orders.loading
-export const selectOrderError = (state: RootState) => state.orders.error
+export default orderSlice.reducer

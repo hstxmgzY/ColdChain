@@ -1,9 +1,10 @@
 import React from "react";
+import OrderPay from "../../../components/orders/pay";
 
 const OrderPayPage = () => {
     return (
         <div>
-            <h1>OrderPayPage Page</h1>
+            <OrderPay />
         </div>
     )
 }
