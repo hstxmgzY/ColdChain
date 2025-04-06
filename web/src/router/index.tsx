@@ -4,7 +4,6 @@ import {
     createBrowserRouter,
     Navigate,
     Outlet,
-    useNavigate,
 } from "react-router-dom"
 import Order from "../pages/order"
 import Lease from "../pages/order/lease"

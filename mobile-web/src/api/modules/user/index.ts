@@ -1,11 +1,6 @@
 import { http } from "../../request"
 import type { UserType } from "../../../interface/user/user"
 
-export const getUserList = async () => {
-    const response = await http.get<UserType[]>("/user/list")
-    return response
-}
-
 export const getUserById = async (userId: number) => {
     const response = await http.get<UserType>(`/user/${userId}`)
     return response

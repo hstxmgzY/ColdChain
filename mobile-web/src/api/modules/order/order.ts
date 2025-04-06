@@ -5,7 +5,6 @@ export const getOrderList = async (status?: string) => {
     const response = await http.get<OrderType[]>("/orders/list", {
         params: status ? { status } : {},
     })
-    // console.log("response", response)
     return response
 }
 

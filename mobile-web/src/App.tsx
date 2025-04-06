@@ -1,4 +1,4 @@
-import router from "./router"
+import AppRouter from "./router"
 import { useEffect } from "react"
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "./store/reducers/user"
@@ -16,11 +16,9 @@ function App() {
     }
   }, [dispatch])
   return (
-    <div className="App">
-      <UserProvider>
-        <RouterProvider router={router} />
-      </UserProvider>
-    </div>
-  )
+    <UserProvider>
+      <AppRouter />
+    </UserProvider>
+  );
 }
 export default App

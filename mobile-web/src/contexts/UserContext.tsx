@@ -53,7 +53,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
     // 重定向到欢迎页面
-    // message.success('登出成功');
+    message.success('登出成功');
     window.location.href = '/';
   };
 
