@@ -6,7 +6,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, LogoutOutlined, Set
 import { CommonHeaderProps } from "../../../interface/common/commonHeader";
 import avatarUrl from '../../../assets/images/2.jpg';
 import './index.css';
-import { useUser } from "../../../contexts/UserContext";
+import { us eUser } from "../../../contexts/UserContext";
 
 const { Header } = Layout;
 

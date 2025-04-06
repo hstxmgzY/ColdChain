@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 import ProfilePage from '../pages/profile'
 import OrderCreatePage from '../pages/orders/create'
@@ -11,13 +11,19 @@ import OrderReviewPage from '../pages/orders/review'
 import NotificationPage from '../pages/notification'
 import OrderItemDetail from '../components/orders/create/item/detail'
 import OrderCompletePage from '../pages/orders/complete'
+import WelcomePage from '../pages/welcome'
+import LoginPage from '../pages/login'
 
-import MainLayout from '../layout/mainLayout'
+import MainLayout from '../layout/MainLayout'
 
 const AppRouter = () => {
   return (
     <Router>
       <Routes>
+        {/* 欢迎和登录页面 */}
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        
         {/* 不带底部导航的页面 */}
         <Route path="/order/item/:index" element={<OrderItemDetail />} />
         <Route path="/order/items" element={<OrderItemsPage />} />
