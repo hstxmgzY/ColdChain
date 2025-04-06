@@ -133,7 +133,7 @@ func (r *OrderRepository) UpdateStatus(orderID, statusID uint) error {
 	return nil
 }
 
-func (r *OrderRepository) GetOrederStatusIDByName(statusName string) (uint, error) {
+func (r *OrderRepository) GetOrderStatusIDByName(statusName string) (uint, error) {
 	var orderStatus models.OrderStatus
 	err := r.db.Where("status_name = ?", statusName).First(&orderStatus).Error
 	if err != nil {
@@ -142,13 +142,13 @@ func (r *OrderRepository) GetOrederStatusIDByName(statusName string) (uint, erro
 	return orderStatus.ID, nil
 }
 
-func (r *OrderRepository) GetCategoryIDByName(categoryName string) (uint, error) {
+func (r *OrderRepository) GetCategoryByName(categoryName string) (models.Category, error) {
 	var category models.Category
 	err := r.db.Where("category_name = ?", categoryName).First(&category).Error
 	if err != nil {
-		return 0, err
+		return models.Category{}, err
 	}
-	return category.ID, nil
+	return category, nil
 }
 
 func (r *OrderRepository) CreateProduct(product *models.Product) error {

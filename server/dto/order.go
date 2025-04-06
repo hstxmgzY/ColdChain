@@ -54,9 +54,6 @@ type ModuleInfoDTO struct {
 
 type CreateOrderRequest struct {
 	UserID       uint                   `json:"user_id" binding:"required"`
-	OrderNumber  string                 `json:"order_number" binding:"required"`
-	TotalPrice   float64                `json:"total_price" binding:"required"`
-	StatusID     uint                   `json:"status_id" binding:"required"`
 	SenderInfo   map[string]interface{} `json:"sender_info" binding:"required"`
 	ReceiverInfo map[string]interface{} `json:"receiver_info" binding:"required"`
 	DeliveryDate string                 `json:"delivery_date" binding:"required"`
@@ -65,10 +62,8 @@ type CreateOrderRequest struct {
 }
 
 type OrderItem struct {
-	ID        uint    `json:"id"`
-	Quantity  int     `json:"quantity" binding:"required"`
-	UnitPrice float64 `json:"unit_price" binding:"required"`
-	Product   Product `json:"product" binding:"required"`
+	Quantity int     `json:"quantity" binding:"required"`
+	Product  Product `json:"product" binding:"required"`
 }
 
 type Product struct {

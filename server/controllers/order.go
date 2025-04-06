@@ -32,6 +32,12 @@ func NewOrderController(db *gorm.DB) *OrderController {
 	}
 }
 
+func (c *OrderController) genOrderNumber() string {
+	// 生成订单号的逻辑
+	// 这里简单返回一个随机字符串，实际应用中可以使用更复杂的算法
+	return fmt.Sprintf("ORD-%d", time.Now().UnixNano())
+}
+
 func (c *OrderController) GetOrderDetail(ctx *gin.Context) {
 	orderID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -244,10 +250,15 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 		return
 	}
 
+	StatusID, err := c.orderRepo.GetOrderStatusIDByName("待支付")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+		return
+	}
+
 	order := models.RentalOrder{
-		OrderNumber:  req.OrderNumber,
-		TotalPrice:   req.TotalPrice,
-		StatusID:     req.StatusID,
+		OrderNumber:  c.genOrderNumber(),
+		StatusID:     StatusID,
 		SenderInfo:   sender_info,
 		ReceiverInfo: receiver_info,
 		DeliveryDate: delivery_date,
@@ -257,23 +268,22 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 
 	err = c.orderRepo.Transaction(func(tx *gorm.DB) error {
 		orderTxn := dao.NewOrderRepository(tx)
-		if err := orderTxn.CreateOrder(&order); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
-			return err
-		}
 
 		orderItems := make([]models.OrderItem, 0)
+		var totalPrice float64
 
 		for _, item := range req.OrderItems {
-			CategoryID, err := orderTxn.GetCategoryIDByName(item.Product.CategoryName)
+			Category, err := orderTxn.GetCategoryByName(item.Product.CategoryName)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取产品分类失败"})
 				return err
 			}
 
+			totalPrice += float64(item.Quantity) * Category.Price
+
 			product := &models.Product{
 				ProductName:    item.Product.ProductName,
-				CategoryID:     CategoryID,
+				CategoryID:     Category.ID,
 				MaxTemperature: item.Product.MaxTemperature,
 				MinTemperature: item.Product.MinTemperature,
 				SpecWeight:     item.Product.SpecWeight,
@@ -292,11 +302,19 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 
 			orderItem := models.OrderItem{
 				Quantity:  item.Quantity,
-				UnitPrice: item.UnitPrice,
-				OrderID:   order.ID,
 				ProductID: product.ID,
 			}
 			orderItems = append(orderItems, orderItem)
+		}
+		order.TotalPrice = totalPrice
+
+		if err := orderTxn.CreateOrder(&order); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建订单失败"})
+			return err
+		}
+
+		for i := range orderItems {
+			orderItems[i].OrderID = order.ID
 		}
 
 		if err := orderTxn.CreateOrderItems(orderItems); err != nil {
@@ -432,7 +450,7 @@ func (c *OrderController) AcceptOrder(ctx *gin.Context) {
 			return err
 		}
 
-		StatusID, err := orderTxn.GetOrederStatusIDByName("已审核")
+		StatusID, err := orderTxn.GetOrderStatusIDByName("已审核")
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
 			return err
@@ -480,7 +498,7 @@ func (c *OrderController) RejectOrder(ctx *gin.Context) {
 			return err
 		}
 
-		StatusID, err := orderTxn.GetOrederStatusIDByName("已驳回")
+		StatusID, err := orderTxn.GetOrderStatusIDByName("已驳回")
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
 			return err

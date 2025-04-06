@@ -4,8 +4,9 @@ import "gorm.io/gorm"
 
 type Category struct {
 	gorm.Model
-	ID           uint   `gorm:"primaryKey" json:"id"`
-	CategoryName string `gorm:"size:50;not null;unique" json:"category_name"`
+	ID           uint    `gorm:"primaryKey" json:"id"`
+	CategoryName string  `gorm:"size:50;not null;unique" json:"category_name"`
+	Price        float64 `gorm:"type:decimal(10,2);not null" json:"price"`
 }
 
 type Product struct {
@@ -21,4 +22,3 @@ type Product struct {
 	OrderItems     []OrderItem `gorm:"foreignKey:ProductID" json:"order_items"`
 	Category       Category    `gorm:"foreignKey:CategoryID" json:"category"`
 }
-

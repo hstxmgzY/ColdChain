@@ -3,7 +3,7 @@ package router
 import (
 	"coldchain/common/logger"
 	"coldchain/server/controllers"
-	database "coldchain/server/mysql"
+	"coldchain/server/mysql"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +33,7 @@ func Router() *gin.Engine {
 	r.Use(CorsMiddleware())
 
 	// 初始化控制器
-	userCtrl := controllers.NewUserController(database.Db)
+	userCtrl := controllers.NewUserController(mysql.Db)
 
 	// 用户路由组
 	userGroup := r.Group("/api/user")
@@ -48,7 +48,7 @@ func Router() *gin.Engine {
 	}
 
 	// 初始化车辆控制器
-	vehicleCtrl := controllers.NewVehicleController(database.Db)
+	vehicleCtrl := controllers.NewVehicleController(mysql.Db)
 
 	// 车辆路由组
 	vehicleGroup := r.Group("/api/resource/vehicle")
@@ -59,7 +59,7 @@ func Router() *gin.Engine {
 		vehicleGroup.DELETE("/delete/:id", vehicleCtrl.DeleteVehicle)
 	}
 	// 初始化订单控制器
-	orderCtrl := controllers.NewOrderController(database.Db)
+	orderCtrl := controllers.NewOrderController(mysql.Db)
 	// 订单路由组
 	orderGroup := r.Group("/api/orders")
 	{
