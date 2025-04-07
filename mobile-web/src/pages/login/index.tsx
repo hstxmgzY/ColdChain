@@ -94,7 +94,7 @@ const Login: React.FC = () => {
         password: values.password,
         role: values.role,
         phone: values.phone,
-        user_id: 0 // 注册时由后端生成
+        // user_id: 0 // 注册时由后端生成
       })
 
       Dialog.alert({

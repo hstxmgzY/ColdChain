@@ -61,6 +61,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const register = (userInfo: UserType) => {
     // 这里可以调用API进行注册
     console.log('注册用户:', userInfo);
+    
   };
 
   return (
