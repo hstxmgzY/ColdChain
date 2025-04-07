@@ -124,7 +124,7 @@ const Login: React.FC = () => {
     <div className="mobile-login-container">
       <div className="login-header">
         <Button className="back-button" onClick={handleBack}>返回</Button>
-        <h2>冷链物流管理系统</h2>
+        <h2>冷链模块租赁平台</h2>
       </div>
 
       <div className="login-content">

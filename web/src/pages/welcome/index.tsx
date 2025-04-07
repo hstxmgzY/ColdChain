@@ -31,9 +31,9 @@ const Welcome: React.FC = () => {
       <div className="welcome-content">
         <Row justify="center" align="middle" className="hero-section">
           <Col xs={24} md={12}>
-            <Title level={1}>冷链物流管理系统</Title>
+            <Title level={1}>冷链模块租赁平台</Title>
             <Paragraph className="hero-description">
-              全面的冷链物流解决方案，为您提供高效、安全、可靠的冷链管理服务。
+              全面的冷链模块租赁平台，为您提供高效、安全、可靠的冷链管理服务。
             </Paragraph>
             <Link to="/login?tab=login">
               <Button type="primary" size="large">
@@ -42,7 +42,7 @@ const Welcome: React.FC = () => {
             </Link>
           </Col>
           <Col xs={24} md={12} className="hero-image">
-            {/* 这里可以放置一个冷链物流相关的图片 */}
+            {/* 这里可以放置一个冷链物流相关的图片，之后有空加一下吧，没空就算了，好烦 */}
           </Col>
         </Row>
 
@@ -90,7 +90,7 @@ const Welcome: React.FC = () => {
       </div>
 
       <div className="welcome-footer">
-        <Paragraph>© {new Date().getFullYear()} 冷链物流管理系统 版权所有</Paragraph>
+        <Paragraph>© {new Date().getFullYear()} 冷链模块租赁平台 版权所有</Paragraph>
       </div>
     </div>
   )

@@ -15,7 +15,7 @@ const Welcome: React.FC = () => {
   return (
     <div className="welcome-container">
       <div className="welcome-header">
-        <h2 className="logo-text">冷链物流管理系统</h2>
+        <h2 className="logo-text">冷链模块租赁平台</h2>
         <div className="button-group">
           <Button
             color="primary"
@@ -88,7 +88,7 @@ const Welcome: React.FC = () => {
       </div>
 
       <footer className="welcome-footer">
-        © {new Date().getFullYear()} 冷链物流管理系统 · 保留所有权利
+        © {new Date().getFullYear()} 冷链模块租赁平台 · 保留所有权利
       </footer>
     </div>
   )
