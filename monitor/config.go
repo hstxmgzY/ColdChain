@@ -1,6 +1,10 @@
 package main
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+
+	_ "coldchain/common/config"
+)
 
 var (
 	MONITOR_PORT string = "9998"

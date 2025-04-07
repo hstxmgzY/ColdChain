@@ -115,6 +115,10 @@ func setOutPutFile(level logrus.Level, logName string) {
 	logrus.SetOutput(file)
 }
 
+func SetOutput(output io.Writer) {
+	logrus.SetOutput(output)
+}
+
 func LoggerToFile() gin.LoggerConfig {
 	setLogDir()
 

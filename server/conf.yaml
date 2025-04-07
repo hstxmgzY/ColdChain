@@ -1,10 +1,10 @@
-mysql:
-  host: 127.0.0.1
-  port: 3306
-  database: coldchain
-  username: root
 server:
-  admin: coldchain
-  password: 123456
-  port: 9999
-  ip: 0.0.0.0
+    admin: coldchain
+    password: 123456
+    port: 9999
+    ip: 0.0.0.0
+    mysql:
+        host: 127.0.0.1
+        port: 3306
+        database: coldchain
+        username: root

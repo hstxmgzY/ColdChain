@@ -70,6 +70,7 @@ func Router() *gin.Engine {
 		orderGroup.POST("/accept/:id", orderCtrl.AcceptOrder)
 		orderGroup.POST("/reject/:id", orderCtrl.RejectOrder)
 		orderGroup.POST("/module", orderCtrl.AddModule)
+		orderGroup.GET("/module/list", orderCtrl.ListModules)
 	}
 
 	return r

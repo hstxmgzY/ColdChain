@@ -538,3 +538,24 @@ func (c *OrderController) AddModule(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{"message": "模块创建成功", "module_id": module.ID})
 }
+
+func (c *OrderController) ListModules(ctx *gin.Context) {
+	modules, err := c.moduleRepo.ListModules()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取模块列表失败"})
+		return
+	}
+
+	var responses []dto.ModuleInfoDTO
+	for _, module := range modules {
+		responses = append(responses, dto.ModuleInfoDTO{
+			ID:                 module.ID,
+			DeviceID:           module.DeviceID,
+			SettingTemperature: module.SettingTemperature,
+			Status:             dto.ModuleStatus(module.Status),
+			IsEnabled:          module.IsEnabled,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, responses)
+}

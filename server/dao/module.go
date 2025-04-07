@@ -44,3 +44,11 @@ func (r *ModuleRepository) CreateModule(module *models.Module) error {
 	}
 	return nil
 }
+
+func (r *ModuleRepository) ListModules() ([]models.Module, error) {
+	var modules []models.Module
+	if err := r.db.Find(&modules).Error; err != nil {
+		return nil, handleDBError(err)
+	}
+	return modules, nil
+}

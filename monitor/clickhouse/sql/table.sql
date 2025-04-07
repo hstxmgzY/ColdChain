@@ -14,6 +14,7 @@ CREATE TABLE vehicle_location (
     vehicle_id String,
     longitude Decimal(9,6),
     latitude Decimal(9,6),
+    speed Decimal(5,2),
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(time_stamp)
 ORDER BY vehicle_id;

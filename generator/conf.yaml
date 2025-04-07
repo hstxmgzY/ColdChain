@@ -1,0 +1,10 @@
+generator:
+    ip: 0.0.0.0
+    port: 5678
+    generstion_rate: 10
+    kafka:
+        brokers:
+            - localhost:9092
+    mysql:
+        host: 127.0.0.1
+        port: 3306
