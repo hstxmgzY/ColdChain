@@ -23,3 +23,6 @@ a cold chain web app 毕业设计，
                    ↘ 聚合后写 ClickHouse（状态、轨迹、报警）
                             ↘ 前端页面打开后通过 API 查询 ClickHouse
 ```
+
+11
+
