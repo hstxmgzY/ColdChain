@@ -8,7 +8,9 @@ import {
   Modal,
   Popup,
   Toast,
-  Card
+  Card,
+  Avatar,
+  TextArea
 } from 'antd-mobile'
 import {
   EditFill,
@@ -19,11 +21,10 @@ import {
 import { useUser } from '../../contexts/UserContext'
 import { UserType, Address } from '../../interface/user/user'
 import { updateUser } from '../../api/modules/user'
-import { TextArea } from 'antd-mobile';
 
 
-const AddressManager = () => {
-  const { userInfo, updateUserInfo } = useUser()
+const Profile = () => {
+  const { userInfo, updateUserInfo, logout } = useUser()
   const [profileForm] = Form.useForm()
   const [addressForm] = Form.useForm()
   const [addressVisible, setAddressVisible] = useState(false)
@@ -39,8 +40,7 @@ const AddressManager = () => {
       username: userInfo?.username || '',
       phone: userInfo?.phone || '',
       role_name: userInfo?.role || ''
-    });
-
+    })
   }, [userInfo])
 
   const handleProfileSubmit = async () => {
@@ -54,6 +54,14 @@ const AddressManager = () => {
       Toast.show({ icon: 'fail', content: '更新失败' })
     }
   }
+
+  // 获取用户名首字母作为头像显示
+  const getAvatarContent = () => {
+    if (userInfo && userInfo.username) {
+      return userInfo.username.charAt(0).toUpperCase();
+    }
+    return null;
+  };
 
   const handleAddressSubmit = async () => {
     try {
@@ -136,53 +144,79 @@ const AddressManager = () => {
         个人信息管理
       </NavBar>
 
-      {/* 基本信息 */}
-      <Card title="基本信息" style={{ margin: 12 }}>
-        <Form
-          form={profileForm}
-          layout="horizontal"
-          mode="card"
-          disabled={!editMode}
-          footer={
-            editMode && (
-              <Button
-                block
-                color="primary"
-                onClick={handleProfileSubmit}
-                size="large"
-              >
+      {/* 个人信息展示/编辑 */}
+      <Card
+        style={{
+          margin: '12px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        {editMode ? (
+          <Form
+            form={profileForm}
+            layout="vertical"
+            footer={
+              <Button block color="primary" onClick={handleProfileSubmit} size="large">
                 保存修改
               </Button>
-            )
-          }
-        >
-          <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
+            }
+            style={{ padding: '12px' }}
           >
-            <Input placeholder="请输入用户名" clearable />
-          </Form.Item>
-          <Form.Item
-            name="phone"
-            label="手机号"
-            rules={[
-              { required: true, message: '请输入手机号' },
-              { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
-            ]}
-          >
-            <Input placeholder="请输入手机号" maxLength={11} />
-          </Form.Item>
-          <Form.Item name="role_name" label="用户角色">
-            <Input disabled />
-          </Form.Item>
-        </Form>
+            <Form.Item
+              name="username"
+              label="用户名"
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
+              <Input placeholder="请输入用户名" clearable />
+            </Form.Item>
+            <Form.Item
+              name="phone"
+              label="手机号"
+              rules={[
+                { required: true, message: '请输入手机号' },
+                { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
+              ]}
+            >
+              <Input placeholder="请输入手机号" maxLength={11} />
+            </Form.Item>
+            <Form.Item name="role_name" label="用户角色">
+              <Input disabled />
+            </Form.Item>
+          </Form>
+        ) : (
+          <div style={{ padding: '12px', display: 'flex', alignItems: 'center' }}>
+            <Avatar
+              src='' style={{ '--size': '64px' }}
+            >
+
+            </Avatar>
+
+            <div style={{ marginLeft: '12px' }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                {userInfo?.username || '用户名'}
+              </div>
+              <div style={{ color: '#888', marginTop: '4px' }}>
+                {userInfo?.phone || '手机号'}
+              </div>
+              <div style={{ color: '#888', marginTop: '4px' }}>
+                角色：{userInfo?.role || '未知'}
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
-      {/* 地址列表 + 弹窗模块复用原实现 */}
+      {/* 地址列表 */}
       <Card
         title="收货地址"
-        style={{ margin: 12 }}
+        style={{
+          margin: '12px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}
         extra={
           <Button
             size="small"
@@ -263,7 +297,7 @@ const AddressManager = () => {
         <Form
           form={addressForm}
           initialValues={{ isDefault: false }}
-          style={{ padding: 12 }}
+          style={{ padding: '12px' }}
         >
           <Form.Item
             name="name"
@@ -294,9 +328,15 @@ const AddressManager = () => {
               maxLength={100}
             />
           </Form.Item>
-
         </Form>
       </Popup>
+
+      {/* 底部退出按钮 */}
+      <div style={{ padding: '12px', marginTop: '12px' }}>
+        <Button block color="danger" size="large" onClick={logout}>
+          退出
+        </Button>
+      </div>
 
       <style jsx>{`
         .address-actions {
@@ -316,4 +356,4 @@ const AddressManager = () => {
   )
 }
 
-export default AddressManager
+export default Profile

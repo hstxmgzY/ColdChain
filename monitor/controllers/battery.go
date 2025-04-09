@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"coldchain/monitor/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,15 +12,5 @@ func (m *Monitor) MonitorBattery(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Device ID is required"})
 		return
 	}
-	conn, err := m.upgrade(ctx.Writer, ctx.Request, nil)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
-		return
-	}
-	defer conn.Close()
 
-	if err := services.MonitorBattery(conn, deviceID); err != nil {
-		conn.WriteJSON(gin.H{"error": err.Error()})
-		return
-	}
 }

@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"github.com/spf13/viper"
@@ -9,9 +9,11 @@ import (
 var (
 	MONITOR_PORT string = "9998"
 	MONITOR_IP   string = "0.0.0.0"
+
+	KAFKA_SOURCE_BROKERS = []string{"localhost:29092"}
 )
 
-func importConfig() {
+func ImportConfig() {
 	if viper.IsSet("monitor.port") {
 		MONITOR_PORT = viper.GetString("monitor.port")
 	}

@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"coldchain/common/mysql/models"
 	"coldchain/server/dao"
 	"coldchain/server/dto"
-	"coldchain/server/models"
 	"encoding/json"
 	"fmt"
 	"net/http"

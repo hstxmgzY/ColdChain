@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"coldchain/monitor/config"
+	"coldchain/monitor/services"
 	"net/http"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
@@ -8,7 +10,9 @@ import (
 )
 
 type Monitor struct {
-	ch       driver.Conn
+	ch driver.Conn
+
+	ms       *services.MonitorService
 	upgrader websocket.Upgrader
 }
 
@@ -23,12 +27,10 @@ func NewMonitor(ch driver.Conn) *Monitor {
 				return true
 			},
 		},
+		ms: services.NewMonitorService(config.KAFKA_SOURCE_BROKERS, "device"),
 	}
 }
 
 func (m *Monitor) upgrade(w http.ResponseWriter, r *http.Request, responseHeader http.Header) (*websocket.Conn, error) {
 	return m.upgrader.Upgrade(w, r, responseHeader)
 }
-
-
-

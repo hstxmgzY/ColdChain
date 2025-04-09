@@ -56,26 +56,26 @@ const Login: React.FC = () => {
 
   // 处理登录提交
   const handleLoginSubmit = async (values: any) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await login(values.phone, values.password)
+      await login(values.phone, values.password, values.captchaCode, captchaId);
       Toast.show({
         content: '登录成功',
         position: 'bottom'
-      })
-      navigate('/profile')
+      });
+      navigate('/profile');
     } catch (error) {
-      console.error('登录失败:', error)
+      console.error('登录失败:', error);
       Toast.show({
         content: '登录失败，请检查账号密码',
         position: 'bottom'
-      })
-      // 刷新验证码
-      fetchCaptcha()
+      });
+      // 登录失败时刷新验证码
+      fetchCaptcha();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // 处理注册提交
   const handleRegisterSubmit = async (values: any) => {
@@ -96,14 +96,13 @@ const Login: React.FC = () => {
         phone: values.phone,
         // user_id: 0 // 注册时由后端生成
       })
-
-      Dialog.alert({
-        content: '注册成功，请登录',
-        onConfirm: () => {
-          setActiveTab('login')
-          setSearchParams({ tab: 'login' })
-        },
-      })
+      // Dialog.alert({
+      //   content: '注册成功，请登录',
+      //   onConfirm: () => {
+      //     setActiveTab('login')
+      //     setSearchParams({ tab: 'login' })
+      //   },
+      // })
     } catch (error) {
       console.error('注册失败:', error)
       Toast.show({

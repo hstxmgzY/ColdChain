@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"coldchain/server/models"
+	"coldchain/common/mysql/models"
 
 	"gorm.io/gorm"
 )

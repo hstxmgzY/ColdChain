@@ -1,14 +1,15 @@
 package main
 
 import (
-	"coldchain/monitor/clickhouse"
+	"coldchain/common/clickhouse"
+	"coldchain/monitor/config"
 	"coldchain/monitor/router"
 )
 
 func main() {
+	config.ImportConfig()
 	clickhouse.InitDB()
-	importConfig()
 
 	r := router.Router()
-	r.Run(MONITOR_IP + ":" + MONITOR_PORT)
+	r.Run(config.MONITOR_IP + ":" + config.MONITOR_PORT)
 }

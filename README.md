@@ -14,6 +14,8 @@ a cold chain web app 毕业设计，
 
 -   generator：数据生成模块
 
+-   common：全局的通用组件
+
 # Real Time
 
 ```

@@ -1,10 +1,10 @@
 import React from "react";
-import AddressManager from "../../components/profile/index";
+import Profile from "../../components/profile/index";
 
 const ProfilPage = () => {
     return (
         <div>
-            <AddressManager />
+            <Profile />
         </div>
     )
 }

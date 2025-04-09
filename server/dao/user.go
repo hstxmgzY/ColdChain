@@ -2,7 +2,7 @@ package dao
 
 import (
 	"coldchain/common/logger"
-	"coldchain/server/models"
+	"coldchain/common/mysql/models"
 	"errors"
 	"strings"
 

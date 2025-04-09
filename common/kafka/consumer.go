@@ -1,42 +1,37 @@
 package kafka
 
-import "github.com/IBM/sarama"
+import (
+	"context"
 
+	"github.com/IBM/sarama"
+)
+
+// 消费指定主题的消息
 type Consumer struct {
-	Consumer sarama.Consumer
+	Consumer sarama.ConsumerGroup
 	Topic    string
 }
 
-func NewKafkaConsumer(brokers []string, topic string) (*Consumer, error) {
+func NewConsumer(brokers []string, topic string) (*Consumer, error) {
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.Initial = sarama.OffsetNewest // 从最新的偏移量开始消费
 
-	consumer, err := sarama.NewConsumer(brokers, config)
+	consumerGroup, err := sarama.NewConsumerGroup(brokers, topic, config)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Consumer{
-		Consumer: consumer,
+		Consumer: consumerGroup,
 		Topic:    topic,
 	}, nil
 }
 
-func (kc *Consumer) ReadMessages() (sarama.PartitionConsumer, error) {
-	partitionList, err := kc.Consumer.Partitions(kc.Topic)
-	if err != nil {
-		return nil, err
+func (cg *Consumer) Consume(handler sarama.ConsumerGroupHandler) error {
+	for {
+		if err := cg.Consumer.Consume(context.Background(), []string{cg.Topic}, handler); err != nil {
+			return err
+		}
 	}
-
-	// 选择第一个分区
-	partition := partitionList[0]
-
-	pc, err := kc.Consumer.ConsumePartition(kc.Topic, partition, sarama.OffsetNewest)
-	if err != nil {
-		return nil, err
-	}
-
-	pc.IsPaused()
-
-	return pc, nil
 }

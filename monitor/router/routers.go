@@ -1,8 +1,8 @@
 package router
 
 import (
+	"coldchain/common/clickhouse"
 	"coldchain/common/logger"
-	"coldchain/monitor/clickhouse"
 	"coldchain/monitor/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -32,13 +32,17 @@ func Router() *gin.Engine {
 	r.Use(logger.Recover)
 	r.Use(CorsMiddleware())
 
-	m := controllers.NewMonitor(clickhouse.GetConn())
+	m := controllers.NewMonitor(clickhouse.GetInstance())
 
 	wsGroup := r.Group("/ws")
 	{
 		wsGroup.GET("monitor/temperature/:deviceID", m.MonitorTemperature)
-		wsGroup.GET("monitor/battery/:deviceID", m.MonitorBattery)
-		wsGroup.GET("monitor/alarm/:deviceID", m.MonitorAlarm)
+	}
+
+	httpGroup := r.Group("/api")
+	{
+		httpGroup.GET("monitor/temperature/list", m.ListTemperature)
+		httpGroup.GET("monitor/alarm/:deviceID", m.ListAlarm)
 	}
 
 	return r

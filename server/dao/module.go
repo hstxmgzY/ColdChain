@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"coldchain/server/models"
+	"coldchain/common/mysql/models"
 
 	"gorm.io/gorm"
 )
@@ -30,6 +30,8 @@ func (r *ModuleRepository) AssignModulesToOrderItem(orderItem models.OrderItem, 
 	for _, module := range modules {
 		module.OrderItemID = &orderItem.ID
 		module.Status = "assigned"
+		module.MaxTemperature = orderItem.Product.MaxTemperature
+		module.MinTemperature = orderItem.Product.MinTemperature
 		if err := r.db.Save(&module).Error; err != nil {
 			return handleDBError(err)
 		}

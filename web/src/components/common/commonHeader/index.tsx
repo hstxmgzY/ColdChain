@@ -6,14 +6,14 @@ import { MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, LogoutOutlined, Set
 import { CommonHeaderProps } from "../../../interface/common/commonHeader";
 import avatarUrl from '../../../assets/images/2.jpg';
 import './index.css';
-import { us eUser } from "../../../contexts/UserContext";
+import { useUser } from "../../../contexts/UserContext";
 
 const { Header } = Layout;
 
 const CommonHeader: React.FC<CommonHeaderProps> = ({ collapsed, onCollapseChange }) => {
     const { userInfo, logout } = useUser();
     const navigate = useNavigate();
-    
+
     // 用户菜单项
     const userMenuItems: MenuProps['items'] = [
         {
@@ -37,7 +37,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({ collapsed, onCollapseChange
             onClick: logout,
         },
     ];
-    
+
     // 获取用户名首字母作为头像显示
     const getAvatarContent = () => {
         if (userInfo && userInfo.username) {
@@ -45,7 +45,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({ collapsed, onCollapseChange
         }
         return null;
     };
-    
+
     return (
         <Header className="header-container">
             <Button
@@ -65,7 +65,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({ collapsed, onCollapseChange
                             <Typography.Text style={{ marginRight: 8 }}>
                                 {userInfo.username}
                             </Typography.Text>
-                            <Avatar 
+                            <Avatar
                                 style={{ backgroundColor: '#1890ff' }}
                                 size={36}
                             >
@@ -74,7 +74,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({ collapsed, onCollapseChange
                         </div>
                     </Dropdown>
                 ) : (
-                    <Avatar src={avatarUrl} size={36}/>
+                    <Avatar src={avatarUrl} size={36} />
                 )}
             </div>
         </Header>

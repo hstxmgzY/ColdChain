@@ -3,8 +3,8 @@ package main
 import (
 	"coldchain/common/kafka"
 	"coldchain/common/logger"
+	"coldchain/common/mysql"
 	"coldchain/server/dao"
-	"coldchain/server/mysql"
 	"math/rand"
 	"os"
 	"strconv"
@@ -12,31 +12,60 @@ import (
 	"time"
 )
 
+func initKafka() {
+	// Initialize Kafka producers and consumers here
+	admin, err := kafka.NewAdmin(KAFKA_BROKERS)
+	if err != nil {
+		logger.Fatalf("Failed to create Kafka admin: %v", err)
+	}
+	defer admin.Close()
+
+	isExist, err := admin.Exists("device")
+	if err != nil {
+		logger.Fatalf("Failed to check if topic device exists: %v", err)
+	}
+	retentionMs := "60000" // 7 days in milliseconds
+	if !isExist {
+		// Create topics for sink kafka if they don't exist
+		err = admin.CreateTopicWithConfig("device", map[string]*string{
+			"retention.ms": &retentionMs,
+		}, 3, 1)
+		if err != nil {
+			logger.Fatalf("Failed to create topic device_temperature: %v", err)
+		}
+	} else {
+		// Update topic configuration if it exists
+		err = admin.UpdateTopic("device", map[string]*string{
+			"retention.ms": &retentionMs,
+		})
+		if err != nil {
+			logger.Fatalf("Failed to update topic device_temperature: %v", err)
+		}
+	}
+
+	logger.Infof("Kafka init successfully")
+}
+
 func main() {
 	// 初始化配置
 	ImportConfig()
 	mysql.InitDB()
 	logger.SetOutput(os.Stdout)
+	initKafka()
 
 	moduleRepo := dao.NewModuleRepository(mysql.Db)
 	devices := make(map[string]*Device)
 	var modulesMut sync.Mutex
-	temperatureProducer, err := kafka.NewKafkaProducer(KAFKA_BROKERS, "device_temperature")
+	producer, err := kafka.NewProducer(KAFKA_BROKERS, "device")
 	if err != nil {
 		panic(err)
 	}
-	defer temperatureProducer.Close()
-
-	batteryProducer, err := kafka.NewKafkaProducer(KAFKA_BROKERS, "device_battery")
-	if err != nil {
-		panic(err)
-	}
-	defer batteryProducer.Close()
+	defer producer.Close()
 
 	go func() {
 		// 每10秒钟检查一次数据库，获取最新的模块列表
 		// 如果有新的模块，则添加到设备列表中
-		ticker := time.NewTicker(time.Second * 1)
+		ticker := time.NewTicker(time.Second * 10)
 		defer ticker.Stop()
 		for range ticker.C {
 			modules, err := moduleRepo.ListModules()
@@ -61,54 +90,21 @@ func main() {
 		}
 	}()
 
-	for {
+	tricker := time.NewTicker(time.Second / time.Duration(GENERSTION_RATE))
+	for range tricker.C {
 		modulesMut.Lock()
 		for _, device := range devices {
-			// 生成温度数据
 			device.CurTemperature = device.SetTemperature + (rand.Float64()-0.5)*2
-			partition, offset, err := temperatureProducer.SendMessage(device.DeviceID + " " + strconv.FormatFloat(device.CurTemperature, 'f', 2, 64))
+			partition, offset, err := producer.SendMessage(device.DeviceID, strconv.FormatFloat(device.CurTemperature, 'f', 2, 64)+" "+strconv.FormatFloat(device.BatteryLevel, 'f', 2, 64))
 			if err != nil {
-				logger.Errorf("发送温度数据失败: %v", err)
+				logger.Errorf("发送数据失败: %v", err)
 			} else {
-				logger.Infof("发送温度数据成功: %s, partition: %d, offset: %d", device.DeviceID, partition, offset)
+				logger.Infof("发送数据成功: %s, partition: %d, offset: %d", device.DeviceID, partition, offset)
 			}
 
-			// 生成电池数据
-			device.BatteryLevel -= BATTERY_CONSUMPTION_RATE
-			if device.BatteryLevel < 0 {
-				device.BatteryLevel = 0
-			}
-			partition, offset, err = batteryProducer.SendMessage(device.DeviceID + " " + strconv.FormatFloat(device.BatteryLevel, 'f', 2, 64))
-			if err != nil {
-				logger.Errorf("发送电池数据失败: %v", err)
-			} else {
-				logger.Infof("发送电池数据成功: %s, partition: %d, offset: %d", device.DeviceID, partition, offset)
-			}
-
-			// 生成设备损坏数据
-			// 如果设备没有损坏，且当前温度不等于设定温度，则进行温度调整
-			// 如果设备损坏，则温度上升
-			if !device.IsDamaged && device.CurTemperature != device.SetTemperature {
-				if device.CurTemperature > device.SetTemperature {
-					device.CurTemperature -= 0.1
-				} else {
-					device.CurTemperature += 0.1
-				}
-			}
-
-			if !device.IsDamaged {
-				if rand.Float64() < DEVICE_DAMAGED_RATIO {
-					device.IsDamaged = true
-				} else {
-					device.IsDamaged = false
-				}
-			} else {
-				device.CurTemperature += 0.2
-			}
+			// 更新设备状态
+			device.UpdateStat()
 		}
 		modulesMut.Unlock()
-
-		// 休眠一段时间，控制生成速度
-		time.Sleep(time.Second / time.Duration(GENERSTION_RATE))
 	}
 }

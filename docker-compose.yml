@@ -1,0 +1,85 @@
+services:
+    # 上游 kafka
+    broker.source:
+        image: apache/kafka:latest
+        container_name: broker-source
+        ports:
+            - "19092:19092"
+        environment:
+            KAFKA_NODE_ID: 1
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:19092
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+            KAFKA_NUM_PARTITIONS: 3
+        volumes:
+            - ./cold-chain-data/kafka-source/data:/var/lib/kafka/data
+            - ./cold-chain-data/kafka-source/secrets:/etc/kafka/secrets
+            - ./cold-chain-data/kafka-source/config:/mnt/shared/config
+
+    # 下游 kafka
+    broker.sink:
+        image: apache/kafka:latest
+        container_name: broker-sink
+        ports:
+            - "29092:29092"
+        environment:
+            KAFKA_NODE_ID: 1
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+            KAFKA_NUM_PARTITIONS: 3
+        volumes:
+            - ./cold-chain-data/kafka-sink/data:/var/lib/kafka/data
+            - ./cold-chain-data/kafka-sink/secrets:/etc/kafka/secrets
+            - ./cold-chain-data/kafka-sink/config:/mnt/shared/config
+
+    clickhouse:
+        image: clickhouse:latest
+        container_name: clickhouse
+        ports:
+            - "9000:9000"
+        volumes:
+            - ./cold-chain-data/clickhouse/data:/var/lib/clickhouse
+            - ./common/clickhouse/sql/table.sql:/docker-entrypoint-initdb.d/table.sql
+        environment:
+            CLICKHOUSE_USER: default
+            CLICKHOUSE_PASSWORD: ""
+            CLICKHOUSE_DB: coldchain
+            TZ: "Asia/Shanghai"
+
+    # redis:
+    #     image: redis:latest
+    #     container_name: redis
+    #     ports:
+    #         - "6379:6379"
+    #     volumes:
+    #         - ./cold-chain-data/redis/data:/data
+    #     environment:
+    #         REDIS_PASSWORD: ""
+
+    # mysql:
+    #     image: mysql:latest
+    #     container_name: mysql
+    #     ports:
+    #         - "3306:3306"
+    #     volumes:
+    #         - ./cold-chain-data/mysql/data:/var/lib/mysql
+    #     environment:
+    #         MYSQL_ROOT_PASSWORD: root
+    #         MYSQL_DATABASE: coldchain
+    #         MYSQL_USER: user
+    #         MYSQL_PASSWORD: password

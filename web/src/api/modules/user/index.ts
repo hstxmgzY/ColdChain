@@ -59,6 +59,6 @@ export const login = async (userData: {
     captcha_answer: string
 }) => {
     const response = await http.post("/user/login", userData)
-    console.log("login response", response)
+    // console.log("login response", response)
     return response
 }

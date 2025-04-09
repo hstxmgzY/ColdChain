@@ -1,11 +1,24 @@
 package controllers
 
 import (
-	"coldchain/monitor/services"
+	"coldchain/common/logger"
+	"coldchain/monitor/dao"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+// 列出一天的温度记录
+func (m *Monitor) ListTemperature(ctx *gin.Context) {
+	temperatures, err := dao.GetDevicesLatestTemperature(m.ch)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取温度记录失败"})
+		logger.Errorf("获取温度记录失败: %v", err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, temperatures)
+}
 
 func (m *Monitor) MonitorTemperature(ctx *gin.Context) {
 	deviceID := ctx.Param("deviceID")
@@ -20,7 +33,7 @@ func (m *Monitor) MonitorTemperature(ctx *gin.Context) {
 	}
 	defer conn.Close()
 
-	if err := services.MonitorTemperature(conn, deviceID); err != nil {
+	if err := m.ms.MonitorTemperature(conn, deviceID); err != nil {
 		conn.WriteJSON(gin.H{"error": err.Error()})
 		return
 	}

@@ -20,10 +20,26 @@ const mockOrders = [
         items_count: 2,
         status_name: "待支付",
     },
+    {
+        id: 3,
+        sender: "赵七",
+        receiver: "钱八",
+        delivery_date: "2025-04-10 11:00",
+        items_count: 1,
+        status_name: "已发货",
+    },
 ]
 
 const OrderReview = () => {
     const navigate = useNavigate()
+
+    const handleCardClick = (order: typeof mockOrders[0]) => {
+        if (order.status_name === "已发货") {
+            navigate(`/order/delivery/${order.id}`)
+        } else {
+            navigate(`/order/detail/${order.id}`)
+        }
+    }
 
     return (
         <div style={{ padding: 12 }}>
@@ -41,15 +57,15 @@ const OrderReview = () => {
                             color="primary"
                             fill="none"
                             onClick={(e) => {
-                                e.stopPropagation() // 阻止父级卡片点击事件
-                                navigate(`/order/detail/${order.id}`)
+                                e.stopPropagation()
+                                handleCardClick(order)
                             }}
                         >
-                            详情
+                            {order.status_name === "已发货" ? "配送信息" : "详情"}
                         </Button>
                     }
                     style={{ marginBottom: 12 }}
-                    onClick={() => navigate(`/order/detail/${order.id}`)}
+                    onClick={() => handleCardClick(order)}
                 >
                     <List>
                         <List.Item title="发件人">{order.sender}</List.Item>
@@ -59,7 +75,13 @@ const OrderReview = () => {
                             title="状态"
                             extra={
                                 <Tag
-                                    color={order.status_name === "已支付" ? "success" : "warning"}
+                                    color={
+                                        order.status_name === "已发货"
+                                            ? "success"
+                                            : order.status_name === "已支付"
+                                                ? "primary"
+                                                : "warning"
+                                    }
                                 >
                                     {order.status_name}
                                 </Tag>

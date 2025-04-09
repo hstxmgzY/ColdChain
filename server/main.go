@@ -1,7 +1,7 @@
 package main
 
 import (
-	"coldchain/server/mysql"
+	"coldchain/common/mysql"
 	"coldchain/server/router"
 )
 

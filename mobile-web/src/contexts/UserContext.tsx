@@ -1,95 +1,103 @@
-import React, { createContext, useContext, ReactNode } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { updateUserInfo as updateUserAction } from '../store/reducers/user'
-import { RootState } from '../store'
-import { UserType } from '../interface/user/user'
-import { Toast } from 'antd-mobile'
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUserInfo as updateUserAction } from '../store/reducers/user';
+import { RootState } from '../store';
+import { UserType } from '../interface/user/user';
+import { Toast } from 'antd-mobile';
+import { login as apiLogin, addUser, getUserById } from '../api/modules/user';
 
 interface UserContextType {
-  userInfo: UserType
-  updateUserInfo: (info: UserType) => void
-  login: (phone: string, password: string) => void
-  logout: () => void
-  register: (userInfo: UserType) => void
+  userInfo: UserType;
+  updateUserInfo: (info: UserType) => void;
+  login: (phone: string, password: string, captchaCode: string, captchaId: string) => Promise<void>;
+  logout: () => void;
+  register: (userInfo: UserType) => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined)
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
 interface UserProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const userInfo = useSelector((state: RootState) => state.user.userInfo)
-  const dispatch = useDispatch()
+  const userInfo = useSelector((state: RootState) => state.user.userInfo);
+  const dispatch = useDispatch();
 
   const updateUserInfo = (info: UserType) => {
-    dispatch(updateUserAction(info))
-  }
+    dispatch(updateUserAction(info));
+  };
 
-  const login = async (phone: string, password: string) => {
+  const login = async (phone: string, password: string, captchaCode: string, captchaId: string) => {
     try {
-      const response = await import('../api/modules/user').then((module) =>
-        module.login({ phone, password })
-      )
-
-      if (response && response.data) {
-        updateUserInfo(response.data)
-        Toast.show({ icon: 'success', content: '登录成功' })
-      } else {
-        Toast.show({ icon: 'fail', content: '登录失败，请检查手机号或密码' })
+      const response = await apiLogin({
+        phone: phone.trim(),
+        password,
+        captcha_id: captchaId,
+        captcha_answer: captchaCode,
+      });
+      console.log('登录返回:', response);
+      if (response) {
+        try {
+          const userResponse = await getUserById(response.user_id);
+          if (userResponse) {
+            updateUserInfo(userResponse);
+            localStorage.setItem('userInfo', JSON.stringify(userResponse));
+          }
+        } catch (error) {
+          console.error('获取用户信息失败:', error);
+        }
       }
-    } catch (error) {
-      console.error('登录失败:', error)
-      Toast.show({ icon: 'fail', content: '登录异常，请稍后重试' })
+    } catch (error: any) {
+      console.error('登录失败:', error);
+      throw error;
     }
-  }
+  };
 
   const logout = () => {
-    dispatch({ type: 'user/clearUserInfo' })
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
-    Toast.show({ icon: 'success', content: '登出成功' })
-    window.location.href = '/'
-  }
+    dispatch({ type: 'user/clearUserInfo' });
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+    Toast.show({
+      content: '登出成功',
+      position: 'bottom'
+    });
+    window.location.href = '/';
+  };
 
-  const register = (userInfo: UserType) => {
-    console.log('注册用户:', userInfo)
-
-    const registerAsync = async () => {
-      try {
-        const response = await import('../api/modules/user').then((module) =>
-          module.addUser(userInfo)
-        )
-
-        if (response.code === 200) {
-          Toast.show({ icon: 'success', content: '注册成功，请登录' })
-          window.location.href = '/login'
-        } else {
-          Toast.show({ icon: 'fail', content: response.message || '注册失败' })
-        }
-      } catch (error) {
-        console.error('注册失败:', error)
-        Toast.show({ icon: 'fail', content: '注册失败，请重试' })
+  const register = async (userInfo: UserType) => {
+    try {
+      const response = await addUser({
+        username: userInfo.username.trim(),
+        password: userInfo.password,
+        phone: userInfo.phone,
+        role: userInfo.role,
+      });
+      if (response) {
+        Toast.show({
+          content: '注册成功，请登录',
+          position: 'bottom'
+        });
       }
+    } catch (error: any) {
+      console.error('注册失败:', error);
+      throw error;
     }
-
-    registerAsync()
-  }
+  };
 
   return (
     <UserContext.Provider value={{ userInfo, updateUserInfo, login, logout, register }}>
       {children}
     </UserContext.Provider>
-  )
-}
+  );
+};
 
 export const useUser = () => {
-  const context = useContext(UserContext)
+  const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useUser must be used within a UserProvider')
+    throw new Error('useUser must be used within a UserProvider');
   }
-  return context
-}
+  return context;
+};
 
-export default UserContext
+export default UserContext;

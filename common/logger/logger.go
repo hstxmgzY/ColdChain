@@ -14,9 +14,8 @@ import (
 )
 
 const (
-	standardFormat = "2006-01-02"
-	dateFormat     = "2006-01-02"
-	timeFormat     = "15:04:05"
+	dateFormat = "2006-01-02"
+	timeFormat = "15:04:05"
 )
 
 func init() {

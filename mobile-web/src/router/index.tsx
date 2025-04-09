@@ -15,6 +15,7 @@ import WelcomePage from '../pages/welcome'
 import LoginPage from '../pages/login'
 
 import MainLayout from '../layout/MainLayout'
+import OrderDeliveryDetail from '../components/orders/delivery'
 
 const AppRouter = () => {
   return (
@@ -23,7 +24,7 @@ const AppRouter = () => {
         {/* 欢迎和登录页面 */}
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        
+
         {/* 不带底部导航的页面 */}
         <Route path="/order/item/:index" element={<OrderItemDetail />} />
         <Route path="/order/items" element={<OrderItemsPage />} />
@@ -32,6 +33,7 @@ const AppRouter = () => {
         <Route path="/order/complete" element={<OrderCompletePage />} />
         <Route path="/order/:id" element={<OrderDetailPage />} />
         <Route path="/order/detail/:id" element={<OrderDetailPage />} />
+        <Route path="/order/delivery/:id" element={<OrderDeliveryDetail />} />
 
         {/* 带底部导航的页面 */}
         <Route

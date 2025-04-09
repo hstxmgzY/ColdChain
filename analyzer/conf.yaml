@@ -1,0 +1,20 @@
+analyzer:
+    source:
+        brokers:
+            - localhost:19092
+    sink:
+        brokers:
+            - localhost:29092
+redis:
+    host: localhost
+    port: 6397
+    db: 0
+    password: ""
+    pool_size: 10
+
+clickhouse:
+    host: localhost
+    port: 9000
+    user: default
+    password: ""
+    database: coldchain
