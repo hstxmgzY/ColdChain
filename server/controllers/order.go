@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"coldchain/common/logger"
 	"coldchain/common/mysql/models"
 	"coldchain/server/dao"
 	"coldchain/server/dto"
-	"coldchain/common/logger"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -519,45 +519,24 @@ func (c *OrderController) RejectOrder(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "订单已驳回"})
 }
 
-func (c *OrderController) AddModule(ctx *gin.Context) {
-	var req dto.AddModuleRequest
+func (c *OrderController) PayOrder(ctx *gin.Context) {
+	var req dto.PayOrderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
 		return
 	}
 
-	module := models.Module{
-		DeviceID:    req.DeviceID,
-		Status:      models.StatusUnassigned,
-		IsEnabled:   false,
-		OrderItemID: nil,
-	}
-
-	if err := c.moduleRepo.CreateModule(&module); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建模块失败"})
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, gin.H{"message": "模块创建成功", "module_id": module.ID})
-}
-
-func (c *OrderController) ListModules(ctx *gin.Context) {
-	modules, err := c.moduleRepo.ListModules()
+	payedStatusID, err := c.orderRepo.GetOrderStatusIDByName("已支付")
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取模块列表失败"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
 		return
 	}
 
-	var responses []dto.ModuleInfoDTO
-	for _, module := range modules {
-		responses = append(responses, dto.ModuleInfoDTO{
-			ID:                 module.ID,
-			DeviceID:           module.DeviceID,
-			SettingTemperature: module.SettingTemperature,
-			Status:             dto.ModuleStatus(module.Status),
-			IsEnabled:          module.IsEnabled,
-		})
+	err = c.orderRepo.UpdateStatus(req.OrderID, payedStatusID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新订单状态失败"})
+		return
 	}
 
-	ctx.JSON(http.StatusOK, responses)
+	ctx.JSON(http.StatusOK, gin.H{"message": "订单已支付"})
 }

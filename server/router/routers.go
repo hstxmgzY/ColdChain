@@ -69,9 +69,19 @@ func Router() *gin.Engine {
 		orderGroup.PUT("/update/:id", orderCtrl.UpdateOrder)
 		orderGroup.POST("/accept/:id", orderCtrl.AcceptOrder)
 		orderGroup.POST("/reject/:id", orderCtrl.RejectOrder)
-		orderGroup.POST("/module", orderCtrl.AddModule)
-		orderGroup.GET("/module/list", orderCtrl.ListModules)
+		orderGroup.POST("/pay/:id", orderCtrl.PayOrder)
 	}
+
+	moduleCtrl := controllers.NewModuleController(mysql.Db)
+	// 模块路由组
+	moduleGroup := r.Group("/api/module")
+
+	{
+		moduleGroup.POST("/create", moduleCtrl.AddModule)
+		moduleGroup.GET("/list", moduleCtrl.ListModules)
+	}
+
+	
 
 	return r
 }
