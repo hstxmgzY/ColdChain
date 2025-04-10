@@ -61,25 +61,26 @@ services:
             CLICKHOUSE_DB: coldchain
             TZ: "Asia/Shanghai"
 
-    # redis:
-    #     image: redis:latest
-    #     container_name: redis
-    #     ports:
-    #         - "6379:6379"
-    #     volumes:
-    #         - ./cold-chain-data/redis/data:/data
-    #     environment:
-    #         REDIS_PASSWORD: ""
+    redis:
+        image: redis:latest
+        container_name: redis
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./cold-chain-data/redis/data:/data
+        environment:
+            REDIS_PASSWORD: ""
 
-    # mysql:
-    #     image: mysql:latest
-    #     container_name: mysql
-    #     ports:
-    #         - "3306:3306"
-    #     volumes:
-    #         - ./cold-chain-data/mysql/data:/var/lib/mysql
-    #     environment:
-    #         MYSQL_ROOT_PASSWORD: root
-    #         MYSQL_DATABASE: coldchain
-    #         MYSQL_USER: user
-    #         MYSQL_PASSWORD: password
+    mysql:
+        image: mysql:8.0
+        container_name: mysql
+        ports:
+            - "3306:3306"
+        volumes:
+            - ./cold-chain-data/mysql/data:/var/lib/mysql
+            - ./cold-chain-data/mysql/log:/var/log/mysql
+            - ./common/mysql/sql/:/docker-entrypoint-initdb.d/
+        environment:
+            MYSQL_DATABASE: coldchain
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_ROOT_HOST: '%'

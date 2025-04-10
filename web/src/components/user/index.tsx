@@ -351,45 +351,6 @@ const UserTable: React.FC = () => {
 
     const columns: TableProps<UserType>["columns"] = [
         { title: "用户名", dataIndex: "username", key: "username" },
-        // {
-        //     title: "用户密码",
-        //     dataIndex: "password",
-        //     key: "password",
-        //     width: 250,
-        //     render: (_, record) => {
-        //         const isVisible = visiblePasswords[record.user_id] // 获取当前行的密码状态
-        //         return (
-        //             <div
-        //                 style={{
-        //                     display: "flex",
-        //                     alignItems: "center",
-        //                     justifyContent: "space-around",
-        //                 }}
-        //             >
-        //                 <span style={{ marginRight: 8 }}>
-        //                     {isVisible ? record.password : "**************"}
-        //                 </span>
-        //                 <Tooltip title={isVisible ? "隐藏密码" : "显示密码"}>
-        //                     {isVisible ? (
-        //                         <EyeInvisibleOutlined
-        //                             style={{ cursor: "pointer" }}
-        //                             onClick={() =>
-        //                                 togglePassword(record.user_id)
-        //                             }
-        //                         />
-        //                     ) : (
-        //                         <EyeOutlined
-        //                             style={{ cursor: "pointer" }}
-        //                             onClick={() =>
-        //                                 togglePassword(record.user_id)
-        //                             }
-        //                         />
-        //                     )}
-        //                 </Tooltip>
-        //             </div>
-        //         )
-        //     },
-        // },
         {
             title: "用户权限",
             dataIndex: "role",

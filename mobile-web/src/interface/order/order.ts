@@ -32,10 +32,6 @@ export interface ContactInfo {
 }
 
 export interface Order {
-    // id: number // 主键
-    // order_number: string // 订单编号
-    // total_price: number // 总价
-    // status_name: string // 订单状态名称
     sender_info: ContactInfo | null // 发件人信息
     receiver_info: ContactInfo | null // 收件人信息
     delivery_date: string | null

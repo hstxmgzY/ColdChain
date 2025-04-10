@@ -21,6 +21,7 @@ import {
 import { useUser } from '../../contexts/UserContext'
 import { UserType, Address } from '../../interface/user/user'
 import { updateUser } from '../../api/modules/user'
+import imgUrl from '../../../public/c3b.png'
 
 
 const Profile = () => {
@@ -54,14 +55,6 @@ const Profile = () => {
       Toast.show({ icon: 'fail', content: '更新失败' })
     }
   }
-
-  // 获取用户名首字母作为头像显示
-  const getAvatarContent = () => {
-    if (userInfo && userInfo.username) {
-      return userInfo.username.charAt(0).toUpperCase();
-    }
-    return null;
-  };
 
   const handleAddressSubmit = async () => {
     try {
@@ -144,7 +137,6 @@ const Profile = () => {
         个人信息管理
       </NavBar>
 
-      {/* 个人信息展示/编辑 */}
       <Card
         style={{
           margin: '12px',
@@ -188,7 +180,7 @@ const Profile = () => {
         ) : (
           <div style={{ padding: '12px', display: 'flex', alignItems: 'center' }}>
             <Avatar
-              src='' style={{ '--size': '64px' }}
+              src={imgUrl} style={{ '--size': '64px' }}
             >
 
             </Avatar>

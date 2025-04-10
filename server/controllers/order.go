@@ -4,6 +4,7 @@ import (
 	"coldchain/common/mysql/models"
 	"coldchain/server/dao"
 	"coldchain/server/dto"
+	"coldchain/common/logger"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -223,6 +224,7 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 	var req dto.CreateOrderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		logger.Errorf("请求参数错误: %v", err)
 		return
 	}
 
