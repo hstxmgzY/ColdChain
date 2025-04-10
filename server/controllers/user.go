@@ -204,13 +204,7 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, dto.UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Role:     user.Role.RoleName,
-		Phone:    user.Phone,
-		Address:  addresses,
-	})
+	ctx.JSON(http.StatusCreated, map[string]interface{}{"user_id": user.ID})
 }
 
 // 处理用户更新
