@@ -1,9 +1,8 @@
 package models
 
 import (
-	"time"
-
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type UserRole struct {
@@ -12,6 +11,7 @@ type UserRole struct {
 }
 
 type User struct {
+	gorm.Model
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	Username     string         `gorm:"type:varchar(50);not null" json:"username"`
 	Phone        string         `gorm:"type:varchar(50);unique" json:"phone"`
@@ -19,7 +19,5 @@ type User struct {
 	RoleID       uint           `gorm:"type:int;not null" json:"role_id"`
 	Role         UserRole       `gorm:"foreignKey:RoleID;references:ID"`
 	Address      datatypes.JSON `gorm:"type:json" json:"address"`
-	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	RentalOrders []RentalOrder  `gorm:"foreignKey:UserID" json:"rental_orders"`
 }

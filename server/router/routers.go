@@ -81,7 +81,13 @@ func Router() *gin.Engine {
 		moduleGroup.GET("/list", moduleCtrl.ListModules)
 	}
 
-	
+	notificationGtrl := controllers.NewNotificationController(mysql.Db)
+
+	notificationGroup := r.Group("/api/notification")
+	{
+		notificationGroup.POST("/create", notificationGtrl.CreateNotification)
+		notificationGroup.GET("/:id", notificationGtrl.GetNotificationByUserID)
+	}
 
 	return r
 }

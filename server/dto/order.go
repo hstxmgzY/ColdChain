@@ -48,6 +48,8 @@ type ModuleInfoDTO struct {
 	ID                 uint         `json:"id"`
 	DeviceID           string       `json:"device_id"`
 	SettingTemperature float64      `json:"setting_temperature"`
+	MaxTemperature     float64      `json:"max_temperature"`
+	MinTemperature     float64      `json:"min_temperature"`
 	Status             ModuleStatus `json:"status"`
 	IsEnabled          bool         `json:"is_enabled"`
 }

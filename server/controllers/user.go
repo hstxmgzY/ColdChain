@@ -188,7 +188,11 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 	}
 
 	if err := c.userRepo.CreateUser(&user); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if err == gorm.ErrDuplicatedKey {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "该用户已注册"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 

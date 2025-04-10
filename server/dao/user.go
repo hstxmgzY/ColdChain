@@ -138,8 +138,10 @@ func (r *UserRepository) ListUsers(page, size int) ([]models.User, error) {
 // 处理数据库错误
 func handleDBError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("记录不存在")
+		return gorm.ErrRecordNotFound
 	}
-
-	return errors.New("数据库操作失败")
+	if errors.Is(err, gorm.ErrDuplicatedKey) || strings.Contains(err.Error(), "Duplicate entry") {
+		return gorm.ErrDuplicatedKey
+	}
+	return err
 }

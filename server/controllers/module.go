@@ -55,6 +55,8 @@ func (c *ModuleController) ListModules(ctx *gin.Context) {
 			ID:                 module.ID,
 			DeviceID:           module.DeviceID,
 			SettingTemperature: module.SettingTemperature,
+			MaxTemperature:     module.MaxTemperature,
+			MinTemperature:     module.MinTemperature,
 			Status:             dto.ModuleStatus(module.Status),
 			IsEnabled:          module.IsEnabled,
 		})

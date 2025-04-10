@@ -78,6 +78,7 @@ func InitDB() {
 		&models.OrderItem{},
 		&models.Vehicle{},
 		&models.Module{},
+		&models.Notification{},
 	)
 	if err != nil {
 		logger.Fatal(map[string]interface{}{"error": err.Error()}, "AutoMigrate failed")

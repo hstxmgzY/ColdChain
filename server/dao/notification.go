@@ -14,8 +14,13 @@ func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
-func (r *NotificationRepository) CreateNotification(notification *models.Notification) error {
-	return r.db.Create(notification).Error
+func (r *NotificationRepository) Transaction(fn func(db *gorm.DB) error) error {
+	tx := r.db.Begin()
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 func (r *NotificationRepository) GetNotificationByID(notificationID uint) (*models.Notification, error) {
@@ -34,9 +39,9 @@ func (r *NotificationRepository) ListNotifications() ([]models.Notification, err
 	return notifications, nil
 }
 
-func (r *NotificationRepository) GetNotificationByUserID(userID uint) ([]models.Notification, error) {
+func (r *NotificationRepository) GetNotificationByUserID(userID int) ([]models.Notification, error) {
 	var notifications []models.Notification
-	if err := r.db.Where("user_id = ?", userID).Find(&notifications).Error; err != nil {
+	if err := r.db.Joins("JOIN notification_users ON notification_users.notification_id = notifications.id").Where("notification_users.user_id = ?", userID).Error; err != nil {
 		return nil, err
 	}
 	return notifications, nil
