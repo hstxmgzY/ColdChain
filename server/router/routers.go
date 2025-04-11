@@ -65,6 +65,7 @@ func Router() *gin.Engine {
 	{
 		orderGroup.GET("/:id", orderCtrl.GetOrderDetail)
 		orderGroup.GET("/list", orderCtrl.ListOrders)
+		orderGroup.GET("/list/:id", orderCtrl.ListOrdersByUserID)
 		orderGroup.POST("/create", orderCtrl.CreateOrder)
 		orderGroup.PUT("/update/:id", orderCtrl.UpdateOrder)
 		orderGroup.POST("/accept/:id", orderCtrl.AcceptOrder)

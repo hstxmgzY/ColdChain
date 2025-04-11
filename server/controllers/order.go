@@ -220,6 +220,79 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responses)
 }
 
+func (c *OrderController) ListOrdersByUserID(ctx *gin.Context) {
+	s := ctx.Param("id")
+	userID, err := strconv.Atoi(s)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		return
+	}
+
+	orders, err := c.orderRepo.ListOrdersByUserID(uint(userID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单列表失败"})
+		return
+	}
+
+	var responses []dto.OrderDTO
+	for _, order := range orders {
+		statusName, err := c.orderRepo.GetOrderStatusName(order.StatusID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取订单状态失败"})
+			return
+		}
+
+		orderItem := make([]dto.OrderItemDTO, len(order.OrderItems))
+		for i, item := range order.OrderItems {
+			orderItem[i] = dto.OrderItemDTO{
+				ID:        item.ID,
+				Quantity:  item.Quantity,
+				UnitPrice: item.UnitPrice,
+				Product: dto.ProductDTO{
+					ID:             item.Product.ID,
+					ProductName:    item.Product.ProductName,
+					CategoryName:   item.Product.Category.CategoryName,
+					MaxTemperature: item.Product.MaxTemperature,
+					MinTemperature: item.Product.MinTemperature,
+					SpecWeight:     item.Product.SpecWeight,
+					SpecVolume:     item.Product.SpecVolume,
+					ImageURL:       item.Product.ImageURL,
+				},
+				Module: make([]dto.ModuleInfoDTO, len(item.Modules)),
+			}
+
+			for j, module := range item.Modules {
+				orderItem[i].Module[j] = dto.ModuleInfoDTO{
+					ID:                 module.ID,
+					DeviceID:           module.DeviceID,
+					SettingTemperature: module.SettingTemperature,
+					Status:             dto.ModuleStatus(module.Status),
+					IsEnabled:          module.IsEnabled,
+				}
+			}
+		}
+
+		response := dto.OrderDTO{
+			ID:           order.ID,
+			OrderNumber:  order.OrderNumber,
+			TotalPrice:   order.TotalPrice,
+			StatusName:   statusName,
+			SenderInfo:   order.SenderInfo,
+			ReceiverInfo: order.ReceiverInfo,
+			OrderNote:    order.OrderNote,
+			User: dto.UserDTO{
+				Username: order.User.Username,
+				RoleName: order.User.Role.RoleName,
+			},
+			OrderItems: orderItem,
+		}
+
+		responses = append(responses, response)
+	}
+
+	ctx.JSON(http.StatusOK, responses)
+}
+
 func (c *OrderController) CreateOrder(ctx *gin.Context) {
 	var req dto.CreateOrderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -305,6 +378,7 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 			orderItem := models.OrderItem{
 				Quantity:  item.Quantity,
 				ProductID: product.ID,
+				UnitPrice: Category.Price * float64(item.Quantity),
 			}
 			orderItems = append(orderItems, orderItem)
 		}

@@ -38,6 +38,20 @@ func (r *OrderRepository) GetOrderByID(orderID uint) (*models.RentalOrder, error
 	return &order, nil
 }
 
+func (r *OrderRepository) ListOrdersByUserID(userID uint) ([]models.RentalOrder, error) {
+	var orders []models.RentalOrder
+	err := r.db.Preload("User.Role").
+		Preload("OrderStatus").
+		Preload("OrderItems.Product.Category").
+		Preload("OrderItems.Modules").
+		Where("user_id = ?", userID).
+		Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (r *OrderRepository) ListOrders() ([]models.RentalOrder, error) {
 	orders := []models.RentalOrder{}
 	err := r.db.Preload("User.Role").
