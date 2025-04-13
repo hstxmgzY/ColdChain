@@ -96,7 +96,7 @@ const OrderCreate = () => {
       })),
     };
 
-    console.log("Submitting order:", updatedOrder);
+    // console.log("Submitting order:", updatedOrder);
 
     try {
       await dispatch(submitOrder(updatedOrder)); // 提交符合后端格式的订单
@@ -108,7 +108,7 @@ const OrderCreate = () => {
   };
 
   const handleSelectSenderAddress = (address: Address) => {
-    console.log("Selected address:", address);
+    // console.log("Selected address:", address);
     setSelectedSenderAddress(address.detail);
     setSelectedSenderName(address.name);
     setSelectedSenderPhone(address.phone);
@@ -157,7 +157,7 @@ const OrderCreate = () => {
             选择发件人地址
           </Button>
           <Form.Item
-            name={["sender_info", "name"]}
+            // name={["sender_info", "name"]}
             label="姓名"
             rules={[{ required: true }]}
           >
@@ -177,7 +177,7 @@ const OrderCreate = () => {
           </Form.Item>
 
           <Form.Item
-            name={["sender_info", "phone"]}
+            // name={["sender_info", "phone"]}
             label="电话"
             rules={[{ required: true }]}
           >
@@ -200,7 +200,7 @@ const OrderCreate = () => {
           </Form.Item>
 
           <Form.Item
-            name={["sender_info", "detail"]}
+            // name={["sender_info", "detail"]}
             label="地址"
             rules={[{ required: true }]}
           >
@@ -230,7 +230,7 @@ const OrderCreate = () => {
             选择收件人地址
           </Button>
           <Form.Item
-            name={["receiver_info", "name"]}
+            // name={["receiver_info", "name"]}
             label="姓名"
             rules={[{ required: true }]}
           >
@@ -250,7 +250,7 @@ const OrderCreate = () => {
           </Form.Item>
 
           <Form.Item
-            name={["receiver_info", "phone"]}
+            // name={["receiver_info", "phone"]}
             label="电话"
             rules={[{ required: true }]}
           >
@@ -273,7 +273,7 @@ const OrderCreate = () => {
           </Form.Item>
 
           <Form.Item
-            name={["receiver_info", "detail"]}
+            // name={["receiver_info", "detail"]}
             label="地址"
             rules={[{ required: true }]}
           >
