@@ -3,7 +3,6 @@ package clickhouse
 import (
 	"coldchain/common/logger"
 	"context"
-	"fmt"
 	"time"
 
 	_ "coldchain/common/config"
@@ -45,8 +44,6 @@ func InitDB() {
 	importConfig()
 	// Initialize ClickHouse connection
 	var err error
-	fmt.Println("Connecting to ClickHouse at " + CLICKHOUSE_IP + ":" + CLICKHOUSE_PORT)
-	fmt.Println("ClickHouse User: " + CLICKHOUSE_USER + " Password: " + CLICKHOUSE_PASSWORD)
 	clickhouseConn, err = clickhouseDriver.Open(&clickhouseDriver.Options{
 		Addr: []string{CLICKHOUSE_IP + ":" + CLICKHOUSE_PORT},
 		Auth: clickhouseDriver.Auth{

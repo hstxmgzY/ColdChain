@@ -27,8 +27,8 @@ import { Address } from "../../../interface/user/user";
 const OrderCreate = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const order = useSelector((state: RootState) => state.orders.order);
-  const loading = useSelector((state: RootState) => state.orders.loading);
+  const order = useSelector((state: RootState) => state.order.order);
+  const loading = useSelector((state: RootState) => state.order.loading);
   const { userInfo } = useUser();
 
   const [form] = Form.useForm();

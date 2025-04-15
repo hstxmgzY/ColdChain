@@ -1,27 +1,31 @@
 import { http } from "../../request"
-import { OrderType } from "../../../interface/order/order"
+import { Order } from "../../../interface/order/order"
 
-export const getOrderList = async (status?: string) => {
-    const response = await http.get<OrderType[]>("/orders/list", {
-        params: status ? { status } : {},
-    })
+export const getOrderListByUserId = async (userId:number) => {
+    const response = await http.get<Order[]>(`/orders/list/${userId}`)
     return response
 }
 
 // 创建订单
-export const createOrder = async (orderData: Partial<OrderType>) => {
-    return await http.post<OrderType>("/orders/create", orderData)
+export const createOrder = async (orderData: Partial<Order>) => {
+    return await http.post<Order>("/orders/create", orderData)
 }
 
 // 更新订单
 export const updateOrder = async (
     id: number,
-    updatedData: Partial<OrderType>
+    updatedData: Partial<Order>
 ) => {
-    return await http.put<OrderType>(`/orders/update/${id}`, updatedData)
+    return await http.put<Order>(`/orders/update/${id}`, updatedData)
 }
 
 // 删除订单
 export const deleteOrder = async (id: number) => {
     return await http.delete(`/orders/delete/${id}`)
+}
+
+
+// 支付后更改订单状态
+export const updatePaiedStatus = async (id: number) => {
+    return await http.put<Order>(`/orders/pay/${id}`)
 }

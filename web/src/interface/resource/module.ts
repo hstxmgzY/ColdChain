@@ -3,7 +3,7 @@ export default interface ModuleType {
     device_id: string
     settingTemperature: number
     status: string
-    isEnabled: boolean
+    is_enabled: boolean
 }
 
 export interface AddModuleRequest {

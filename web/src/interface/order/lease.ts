@@ -9,7 +9,6 @@ export interface LeaseType {
         | "已发货"
         | "已完成"
         | "已取消"
-        | "已驳回"
     price: number // 价格
     create_time: string // 创建时间
     delivery_time: string // 取货时间

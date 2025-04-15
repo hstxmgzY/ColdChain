@@ -10,7 +10,6 @@ import {
   Modal,
   Form,
   Input,
-  InputNumber,
   message,
 } from "antd";
 import ColdModuleCard from "./coldModuleCard";
@@ -20,6 +19,11 @@ import {
   getModuleList,
   addModule,
 } from "../../../api/modules/resources/module";
+// 引入获取温度和电池电量数据的接口及类型
+import {
+  getTemperatureList,
+  TemperatureData,
+} from "../../../api/modules/monitor";
 
 const { Text } = Typography;
 
@@ -38,19 +42,35 @@ const ColdModuleManager = () => {
 
   const fetchModuleData = async () => {
     try {
-      const response = await getModuleList();
-      console.log(response);
-      const data = response.map((item: any) => ({
-        id: item.id,
-        device_id: item.device_id,
-        temperature: item.settingTemperature,
-        status: item.status,
-        isEnabled: item.isEnabled,
-        battery: undefined, // 后续通过 websocket 更新
-        currentTemperature: undefined, // 后续通过 websocket 更新
-        volume: undefined,
-        product: undefined,
-      }));
+      // 先获取模块列表
+      const moduleResponse = await getModuleList();
+      // 再获取温度和电池数据
+      const temperatureResponse = await getTemperatureList();
+      // 构建一个 map，以 device_id 为键方便后续匹配数据
+      const temperatureMap: Map<string, TemperatureData> = new Map();
+      temperatureResponse.forEach((temp) => {
+        temperatureMap.set(temp.device_id, temp);
+      });
+
+      // 根据模块数据，结合温度数据更新 temperature 和 battery 字段
+      const data = moduleResponse.map((item: any) => {
+        const tempData = temperatureMap.get(item.device_id);
+        return {
+          id: item.id,
+          device_id: item.device_id,
+          // 如果温度数据存在，则使用接口返回的温度，否则保留原先配置温度
+          temperature: tempData
+            ? tempData.temperature
+            : item.settingTemperature,
+          status: item.status,
+          is_enabled: item.is_enabled,
+          // 对应电池数据字段 battery_level 赋值给 battery
+          battery: tempData ? tempData.battery_level : undefined,
+          volume: undefined,
+          product: undefined,
+        };
+      });
+
       setModuleData(data);
       setFilteredData(data);
     } catch (error) {
@@ -63,7 +83,7 @@ const ColdModuleManager = () => {
     // const socket = new WebSocket("ws://your-server/ws/module")
     // socket.onmessage = (event) => {
     //   const update = JSON.parse(event.data)
-    //   // 根据 deviceId 更新状态数据
+    //   // 根据 device_id 更新状态数据
     // }
   };
 
@@ -101,7 +121,7 @@ const ColdModuleManager = () => {
     let filtered = moduleData;
 
     if (key === "isEnabled" && value !== undefined) {
-      filtered = filtered.filter((item) => item.isEnabled === value);
+      filtered = filtered.filter((item) => item.is_enabled === value);
     }
 
     if (selectedTab) {

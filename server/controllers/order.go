@@ -64,6 +64,7 @@ func (c *OrderController) GetOrderDetail(ctx *gin.Context) {
 		ID:           order.ID,
 		OrderNumber:  order.OrderNumber,
 		TotalPrice:   order.TotalPrice,
+		DeliveryDate: order.DeliveryDate.Format("2006-01-02 15:04"),
 		StatusName:   statusName,
 		SenderInfo:   order.SenderInfo,
 		ReceiverInfo: order.ReceiverInfo,
@@ -151,6 +152,7 @@ func (c *OrderController) ListOrders(ctx *gin.Context) {
 			ID:           order.ID,
 			OrderNumber:  order.OrderNumber,
 			TotalPrice:   order.TotalPrice,
+			DeliveryDate: order.DeliveryDate.Format("2006-01-02 15:04"),
 			StatusName:   statusName,
 			SenderInfo:   order.SenderInfo,
 			ReceiverInfo: order.ReceiverInfo,
@@ -276,6 +278,7 @@ func (c *OrderController) ListOrdersByUserID(ctx *gin.Context) {
 			ID:           order.ID,
 			OrderNumber:  order.OrderNumber,
 			TotalPrice:   order.TotalPrice,
+			DeliveryDate: order.DeliveryDate.Format("2006-01-02 15:04"),
 			StatusName:   statusName,
 			SenderInfo:   order.SenderInfo,
 			ReceiverInfo: order.ReceiverInfo,
@@ -442,6 +445,13 @@ func (c *OrderController) UpdateOrder(ctx *gin.Context) {
 
 	if req.TotalPrice != nil {
 		order.TotalPrice = *req.TotalPrice
+	}
+	if req.DeliveryDate != nil {
+		order.DeliveryDate, err = time.Parse("2006-01-02 15:04", *req.DeliveryDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "交付日期格式错误"})
+			return
+		}
 	}
 	if req.OrderNumber != nil {
 		order.OrderNumber = *req.OrderNumber

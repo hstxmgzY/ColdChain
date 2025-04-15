@@ -2,8 +2,6 @@ module coldchain
 
 go 1.22.0
 
-toolchain go1.22.1
-
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/sirupsen/logrus v1.9.3

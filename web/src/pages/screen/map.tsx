@@ -1,11 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
+// import MapRouteViewer from "../../components/mapviewer";
+// import MapComponent from "../../components/map";
+import MapRouteViewer from "../../components/mapDemo";
 
 const Map = () => {
-    return (
-        <div>
-            <h1>Map Page</h1>
-        </div>
-    )
-}
+  const [mapInstance, setMapInstance] = useState<any>(null); // ✅ 加上这一行
+
+  return (
+    <div>
+      <MapRouteViewer
+        jsApiKey="bc7a516a5ffa5e4869a3fd16367d05f4"
+        securityJsCode="797c8ec621379363b489cd13e16e37c2"
+        webServiceKey="15807c9291055bcaaa80372f695f0ed0"
+        locs={[
+          { position: [116.46, 39.99], nodeType: 0, orderId: -1 },
+          { position: [116.47, 39.98], nodeType: 1, orderId: 0 },
+          { position: [116.48, 39.97], nodeType: 2, orderId: 0 },
+          { position: [116.45, 39.96], nodeType: 1, orderId: 1 },
+          { position: [116.44, 39.95], nodeType: 2, orderId: 1 },
+        ]}
+        trajectories={[
+          [0, 1, 2, 0],
+          [0, 3, 4, 0],
+        ]}
+      />
+
+      {/* <MapComponent
+        jsApiKey="bc7a516a5ffa5e4869a3fd16367d05f4"
+        securityJsCode="797c8ec621379363b489cd13e16e37c2"
+        onMapLoad={setMapInstance}
+      />
+      {mapInstance && (
+        <MapRouteViewer
+          map={mapInstance}
+          jsApiKey="bc7a516a5ffa5e4869a3fd16367d05f4"
+          webServiceKey="15807c9291055bcaaa80372f695f0ed0"
+          securityJsCode="797c8ec621379363b489cd13e16e37c2"
+          locs={[
+            { position: [116.46, 39.99], nodeType: 0, orderId: -1 },
+            { position: [116.47, 39.98], nodeType: 1, orderId: 0 },
+            { position: [116.48, 39.97], nodeType: 2, orderId: 0 },
+            { position: [116.45, 39.96], nodeType: 1, orderId: 1 },
+            { position: [116.44, 39.95], nodeType: 2, orderId: 1 },
+          ]}
+          trajectories={[
+            [0, 1, 2, 0],
+            [0, 3, 4, 0],
+          ]}
+        />
+      )} */}
+    </div>
+  );
+};
 
 export default Map;

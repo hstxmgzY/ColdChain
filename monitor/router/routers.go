@@ -42,7 +42,8 @@ func Router() *gin.Engine {
 	httpGroup := r.Group("/api")
 	{
 		httpGroup.GET("monitor/temperature/list", m.ListTemperature)
-		httpGroup.GET("monitor/alarm/:deviceID", m.ListAlarm)
+		httpGroup.GET("monitor/alarm/:deviceID", m.GetAlarmByID)
+		httpGroup.GET("monitor/alarm", m.ListAlarm)
 	}
 
 	return r

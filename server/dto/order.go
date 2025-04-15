@@ -4,6 +4,7 @@ type OrderDTO struct {
 	ID           uint           `json:"id"`
 	OrderNumber  string         `json:"order_number"`
 	TotalPrice   float64        `json:"total_price"`
+	DeliveryDate string         `json:"delivery_date"`
 	StatusName   string         `json:"status_name"`
 	SenderInfo   interface{}    `json:"sender_info"`
 	ReceiverInfo interface{}    `json:"receiver_info"`
@@ -81,6 +82,7 @@ type Product struct {
 type UpdateOrderRequest struct {
 	OrderNumber  *string  `json:"order_number" binding:"required"`
 	TotalPrice   *float64 `json:"total_price" binding:"required"`
+	DeliveryDate *string  `json:"delivery_date" binding:"required"`
 	StatusID     *uint    `json:"status_id" binding:"required"`
 	SenderInfo   *string  `json:"sender_info" binding:"required"`
 	ReceiverInfo *string  `json:"receiver_info" binding:"required"`

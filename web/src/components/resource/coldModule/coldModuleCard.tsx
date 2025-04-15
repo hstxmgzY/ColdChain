@@ -21,8 +21,8 @@ const ColdModuleCard: React.FC<ColdModuleCardProps> = ({ data }) => {
           <Card
             title={`冷链模块 ${item.id}`}
             extra={
-              <Tag color={item.isEnabled ? "green" : "red"}>
-                {item.isEnabled ? "在线" : "离线"}
+              <Tag color={item.is_enabled ? "green" : "red"}>
+                {item.is_enabled ? "在线" : "离线"}
               </Tag>
             }
             style={{
@@ -94,7 +94,7 @@ const ColdModuleCard: React.FC<ColdModuleCardProps> = ({ data }) => {
               >
                 设备轨迹
               </Button>
-              <DetailInfo />
+              <DetailInfo device={item} />
               <MoreAction />
             </Space>
           </Card>

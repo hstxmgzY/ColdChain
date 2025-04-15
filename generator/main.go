@@ -74,6 +74,9 @@ func main() {
 			}
 			modulesMut.Lock()
 			for _, module := range modules {
+				if module.IsEnabled == false {
+					continue
+				}
 				if _, ok := devices[module.DeviceID]; !ok {
 					device := &Device{
 						DeviceID:       module.DeviceID,

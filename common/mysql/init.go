@@ -83,7 +83,7 @@ func InitDB() {
 	if err != nil {
 		logger.Fatal(map[string]interface{}{"error": err.Error()}, "AutoMigrate failed")
 	}
-	logger.Infof("Database migrated successfully")
+	logger.Infof("Mysql Database migrated successfully")
 }
 
 func GetInstance() *gorm.DB {

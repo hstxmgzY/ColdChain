@@ -48,17 +48,18 @@ services:
             - ./cold-chain-data/kafka-sink/config:/mnt/shared/config
 
     clickhouse:
-        image: clickhouse:latest
+        image: clickhouse:24.8
         container_name: clickhouse
         ports:
             - "9000:9000"
         volumes:
             - ./cold-chain-data/clickhouse/data:/var/lib/clickhouse
             - ./common/clickhouse/sql/table.sql:/docker-entrypoint-initdb.d/table.sql
+            - ./cold-chain-data/clickhouse/log:/var/log/clickhouse-server
         environment:
-            CLICKHOUSE_USER: default
-            CLICKHOUSE_PASSWORD: ""
             CLICKHOUSE_DB: coldchain
+            CLICKHOUSE_USER: "coldchain"
+            CLICKHOUSE_PASSWORD: 
             TZ: "Asia/Shanghai"
 
     redis:

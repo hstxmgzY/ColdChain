@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	_ "coldchain/common/config"
+	"coldchain/common/logger"
 )
 
 var (
@@ -46,6 +47,7 @@ func InitDB() {
 	if err := redisClient.Ping(redisClient.Context()).Err(); err != nil {
 		panic("Failed to connect to Redis: " + err.Error())
 	}
+	logger.Infof("Redis initialized successfully")
 }
 
 func GetInstance() *redis.Client {

@@ -63,11 +63,11 @@ const ColdModuleTable: React.FC<ColdModuleTableProps> = ({ data }) => {
     },
     {
       title: "启用状态",
-      dataIndex: "isEnabled",
-      key: "isEnabled",
-      render: (isEnabled) => (
-        <Tag color={isEnabled ? "green" : "red"}>
-          {isEnabled ? "在线" : "离线"}
+      dataIndex: "is_enabled",
+      key: "is_enabled",
+      render: (is_enabled) => (
+        <Tag color={is_enabled ? "green" : "red"}>
+          {is_enabled ? "在线" : "离线"}
         </Tag>
       ),
     },
