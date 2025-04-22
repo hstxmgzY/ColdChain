@@ -3,6 +3,7 @@ import { http } from "../../request"
 
 export const getModuleList = async () => {
     const response = await http.get("/module/list")
+    // console.log(response)
     return response
 }
 

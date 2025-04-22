@@ -45,12 +45,25 @@ const ColdModuleManager = () => {
       // 先获取模块列表
       const moduleResponse = await getModuleList();
       // 再获取温度和电池数据
-      const temperatureResponse = await getTemperatureList();
+      // console.log("获取模块列表:", moduleResponse);
       // 构建一个 map，以 device_id 为键方便后续匹配数据
       const temperatureMap: Map<string, TemperatureData> = new Map();
-      temperatureResponse.forEach((temp) => {
-        temperatureMap.set(temp.device_id, temp);
-      });
+      const temperatureResponse = await getTemperatureList();
+      try {
+        const temperatureResponse = await getTemperatureList();
+        if (Array.isArray(temperatureResponse)) {
+          temperatureResponse.forEach((temp) => {
+            temperatureMap.set(temp.device_id, temp);
+          });
+        } else {
+          console.warn("温度数据不是数组，跳过处理:", temperatureResponse);
+        }
+      } catch (error) {
+        console.warn("获取温度数据失败，跳过:", error);
+      }
+      // temperatureResponse.forEach((temp) => {
+      //   temperatureMap.set(temp.device_id, temp);
+      // });
 
       // 根据模块数据，结合温度数据更新 temperature 和 battery 字段
       const data = moduleResponse.map((item: any) => {

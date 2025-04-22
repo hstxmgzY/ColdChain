@@ -21,8 +21,8 @@ var (
 )
 
 func importConfig() {
-	if viper.IsSet("clickhouse.ip") {
-		CLICKHOUSE_IP = viper.GetString("clickhouse.ip")
+	if viper.IsSet("clickhouse.host") {
+		CLICKHOUSE_IP = viper.GetString("clickhouse.host")
 	}
 	if viper.IsSet("clickhouse.port") {
 		CLICKHOUSE_PORT = viper.GetString("clickhouse.port")

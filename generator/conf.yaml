@@ -4,7 +4,6 @@ generator:
     generstion_rate: 1
     kafka:
         brokers:
-            - localhost:19092
-    mysql:
-        host: 127.0.0.1
-        port: 3306
+            - broker.source:19092
+mysql:
+    host: mysql

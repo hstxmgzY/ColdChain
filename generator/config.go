@@ -50,12 +50,6 @@ func ImportConfig() {
 	if viper.IsSet("generator.gen_port") {
 		GEN_PORT = viper.GetString("gen_port")
 	}
-	if viper.IsSet("generator.mysql.host") {
-		MYSQL_HOST = viper.GetString("mysql.host")
-	}
-	if viper.IsSet("generator.mysql.port") {
-		MYSQL_PORT = viper.GetString("mysql.port")
-	}
 	if viper.IsSet("generator.kafka.brokers") {
 		KAFKA_BROKERS = viper.GetStringSlice("generator.kafka.brokers")
 	}

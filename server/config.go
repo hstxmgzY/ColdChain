@@ -1,6 +1,10 @@
 package main
 
-import "github.com/spf13/viper"
+import (
+	_ "coldchain/common/config"
+
+	"github.com/spf13/viper"
+)
 
 var (
 	SERVER_DEFAULT_ADMIN          string = "clodchain"

@@ -1,5 +1,9 @@
 clickhouse:
-  host: localhost
+  host: clickhouse
   port: 9000
   user: coldchain
   password: ""
+kafka:
+  sink:
+    brokers:
+      - broker.sink:29092

@@ -3,13 +3,11 @@ package dao
 import (
 	"coldchain/common/mysql/models"
 
-	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type DeviceRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db *gorm.DB
 }
 
 func NewDeviceRepository(db *gorm.DB) *DeviceRepository {

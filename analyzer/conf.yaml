@@ -1,20 +1,23 @@
 analyzer:
     source:
         brokers:
-            - localhost:19092
+            - broker.source:19092
     sink:
         brokers:
-            - localhost:29092
+            - broker.sink:29092
 redis:
-    host: localhost
+    host: redis
     port: 6379
     db: 0
     password: ""
     pool_size: 10
 
 clickhouse:
-    host: localhost
+    host: clickhouse
     port: 9000
     user: coldchain
     password: ""
     database: coldchain
+
+mysql:
+    host: mysql

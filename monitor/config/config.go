@@ -20,4 +20,7 @@ func ImportConfig() {
 	if viper.IsSet("monitor.ip") {
 		MONITOR_IP = viper.GetString("monitor.ip")
 	}
+	if viper.IsSet("kafka.sink.brokers") {
+		KAFKA_SOURCE_BROKERS = viper.GetStringSlice("kafka.sink.brokers")
+	}
 }

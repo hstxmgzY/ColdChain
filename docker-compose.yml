@@ -9,10 +9,10 @@ services:
             KAFKA_NODE_ID: 1
             KAFKA_PROCESS_ROLES: broker,controller
             KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:19092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.source:19092
             KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.source:9093
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
             KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
             KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -33,10 +33,10 @@ services:
             KAFKA_NODE_ID: 1
             KAFKA_PROCESS_ROLES: broker,controller
             KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.sink:29092
             KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.sink:9093
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
             KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
             KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -85,3 +85,89 @@ services:
             MYSQL_DATABASE: coldchain
             MYSQL_ALLOW_EMPTY_PASSWORD: yes
             MYSQL_ROOT_HOST: '%'
+
+    nginx:
+        image: nginx:alpine
+        container_name: nginx
+        ports:
+            - "80:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
+            - ./web/dist:/usr/share/nginx/html
+        depends_on:
+            - server
+            - monitor
+
+    server:
+        build:
+            context: .
+            dockerfile: ./server/Dockerfile
+        container_name: server
+        ports:
+            - "9999:9999"
+        depends_on:
+            - mysql
+
+    monitor:
+        build:
+            context: .
+            dockerfile: ./monitor/Dockerfile
+        container_name: monitor
+        ports:
+            - "9998:9998"
+        depends_on:
+            - broker.sink
+            - clickhouse
+            - mysql
+
+    # delivery:
+    #     build: ./delivery
+    #     container_name: delivery
+    #     ports:
+    #     - "5000:5000"
+
+    analyzer1:
+        build:
+            context: .
+            dockerfile: ./analyzer/Dockerfile
+        image: coldchain-analyzer
+        container_name: analyzer1
+        depends_on:
+            - broker.sink
+            - clickhouse
+            - redis
+            - mysql
+
+    analyzer2:
+        image: coldchain-analyzer
+        container_name: analyzer2
+        depends_on:
+            - broker.sink
+            - clickhouse
+            - redis
+            - mysql
+
+    analyzer3:
+        image: coldchain-analyzer
+        container_name: analyzer3
+        depends_on:
+            - broker.sink
+            - clickhouse
+            - redis
+            - mysql
+
+
+    generator:
+        build:
+            context: .
+            dockerfile: ./generator/Dockerfile
+        container_name: generator
+        depends_on:
+            - broker.source
+            - mysql
+
+    # web-mobile:
+    #     context: ./web-mobile
+    #     networks:
+    #         - coldnet
+

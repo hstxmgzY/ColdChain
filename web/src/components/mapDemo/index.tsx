@@ -39,8 +39,13 @@ const MapRouteViewer: React.FC<Props> = ({
     let map: any;
     let infoWindow: any;
 
+    const timeout = setTimeout(() => {
+      console.warn("⏰ 地图初始化可能未触发 complete，强制取消 loading");
+      setLoading(false);
+    }, 3000);
+
     window._AMapSecurityConfig = {
-      securityJsCode,
+      securityJsCode: securityJsCode,
     };
 
     AMapLoader.load({
@@ -59,13 +64,15 @@ const MapRouteViewer: React.FC<Props> = ({
         const minLat = Math.min(...lats);
         const maxLat = Math.max(...lats);
 
-        const defaultLayer = AMap.createDefaultLayer();
+        // const defaultLayer = AMap.createDefaultLayer();
 
         map = new AMap.Map("container", {
           viewMode: "3D",
-          center: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
+          layers: [new AMap.TileLayer()],
           zoom: 12,
-          layers: [defaultLayer],
+          center: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
+          mapStyle: "amap://styles/whitesmoke",
+          // layers: [defaultLayer],
         });
 
         map.on("complete", () => {
@@ -181,11 +188,13 @@ const MapRouteViewer: React.FC<Props> = ({
             console.warn("setBounds失败：", e);
           }
           setLoading(false);
+          clearTimeout(timeout);
         });
       })
       .catch((e) => {
         console.error("地图加载失败：", e);
         setLoading(false);
+        clearTimeout(timeout);
       });
 
     return () => map?.destroy?.();
@@ -197,7 +206,7 @@ const MapRouteViewer: React.FC<Props> = ({
       <div
         id="container"
         className="container"
-        style={{ width: "100%", height: "100vh" }}
+        style={{ width: "100%", height: "500px" }}
       />
     </div>
   );

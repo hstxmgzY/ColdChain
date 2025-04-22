@@ -1,20 +1,20 @@
-import React from "react"
+import React from "react";
 import {
   EditOutlined,
   EllipsisOutlined,
   SettingOutlined,
-} from "@ant-design/icons"
-import { Avatar, Card, Divider, Typography } from "antd"
-import { useSelector } from "react-redux"
-import { RootState } from "../../store"
-import { UserOutlined } from "@ant-design/icons"
+} from "@ant-design/icons";
+import { Avatar, Card, Divider, Typography } from "antd";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import { UserOutlined } from "@ant-design/icons";
 
-const { Meta } = Card
-const { Text } = Typography
+const { Meta } = Card;
+const { Text } = Typography;
 
 const PersonCard: React.FC = () => {
   // 从 Redux store 获取用户信息
-  const userInfo = useSelector((state: RootState) => state.user.userInfo)
+  const userInfo = useSelector((state: RootState) => state.user.userInfo);
 
   // 角色类型映射
   const roleMap: { [key: string]: string } = {
@@ -22,7 +22,7 @@ const PersonCard: React.FC = () => {
     individual: "个人用户",
     manager: "冷链业务管理员",
     merchant: "商户",
-  }
+  };
 
   const getAvatarContent = () => {
     // 存在有效用户名时处理首字母
@@ -31,22 +31,22 @@ const PersonCard: React.FC = () => {
       const cleanName = userInfo.username.replace(
         /[^a-zA-Z0-9\u4e00-\u9fa5]/g,
         ""
-      )
+      );
       if (cleanName.length > 0) {
         // 取第一个字符（支持中文）
-        const firstChar = cleanName.charAt(0)
+        const firstChar = cleanName.charAt(0);
         // 中文直接返回，英文返回大写
         return /[\u4e00-\u9fa5]/.test(firstChar)
           ? firstChar
-          : firstChar.toUpperCase()
+          : firstChar.toUpperCase();
       }
     }
     // 无有效用户名时返回 null 显示默认图标
-    return null
-  }
+    return null;
+  };
 
   // 获取头像显示内容
-  const avatarContent = getAvatarContent()
+  const avatarContent = getAvatarContent();
 
   return (
     <Card
@@ -79,7 +79,7 @@ const PersonCard: React.FC = () => {
         <div>
           <Text type="secondary">上次登录时间：</Text>
           <Text type="secondary">
-            {userInfo?.lastLogin || "2025-02-11"} {/* 根据实际字段调整 */}
+            {userInfo?.lastLogin || "2025-04-18"} {/* 根据实际字段调整 */}
           </Text>
         </div>
 
@@ -93,7 +93,7 @@ const PersonCard: React.FC = () => {
         </div>
       </div>
     </Card>
-  )
-}
+  );
+};
 
-export default PersonCard
+export default PersonCard;

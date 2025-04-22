@@ -78,13 +78,13 @@ const AlarmInfoTable: React.FC = () => {
   const [createForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // 获取实际后端报警数据，替换原来的 mock 数据
   const fetchAlarmInfo = async () => {
     setLoading(true);
     try {
       const response = await getMonitorAlarmList();
-      setData(response);
-      setFilteredData(response);
+      const safeData = Array.isArray(response) ? response : [];
+      setData(safeData);
+      setFilteredData(safeData);
     } catch {
       message.error("获取报警列表失败");
     } finally {
