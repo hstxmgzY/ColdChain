@@ -1,7 +1,7 @@
 generator:
     ip: 0.0.0.0
     port: 5678
-    generstion_rate: 1
+    generation_rate: 1
     kafka:
         brokers:
             - broker.source:19092

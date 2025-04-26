@@ -12,17 +12,20 @@ const Map = () => {
         jsApiKey="bc7a516a5ffa5e4869a3fd16367d05f4"
         securityJsCode="797c8ec621379363b489cd13e16e37c2"
         webServiceKey="15807c9291055bcaaa80372f695f0ed0"
-        locs={[
-          { position: [121.636, 29.92], nodeType: 0, orderId: -1 },
-          { position: [121.636, 29.909], nodeType: 1, orderId: 0 },
-          { position: [121.631, 29.916], nodeType: 2, orderId: 0 },
-          { position: [121.627, 29.921], nodeType: 1, orderId: 1 },
-          { position: [121.622, 29.919], nodeType: 2, orderId: 1 },
-        ]}
-        trajectories={[
-          [0, 1, 2],
-          [2, 3, 4],
-        ]}
+        // locs={[
+        //   { position: [121.636, 29.92], nodeType: 0, orderId: -1 },
+        //   { position: [121.636, 29.909], nodeType: 1, orderId: 0 },
+        //   { position: [121.631, 29.916], nodeType: 2, orderId: 0 },
+        //   { position: [121.627, 29.921], nodeType: 1, orderId: 1 },
+        //   { position: [121.622, 29.919], nodeType: 2, orderId: 1 },
+        // ]}
+        // trajectories={[
+        //   [0, 1, 2],
+        //   [2, 3, 4],
+        // ]}
+        fetchUrl="http://127.0.0.1:8000/routes/all"
+        buttonText="查看配送路径"
+        height="600px"
       />
 
       {/* <MapComponent

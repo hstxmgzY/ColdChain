@@ -6,10 +6,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// MonitorService 监控服务
 type MonitorService struct {
 	kf *kafka.Consumer
 }
 
+// NewMonitorService 创建一个新的监控服务
 func NewMonitorService(brokers []string, topic string) *MonitorService {
 	kf, err := kafka.NewConsumer(brokers, topic)
 	if err != nil {
@@ -20,6 +22,7 @@ func NewMonitorService(brokers []string, topic string) *MonitorService {
 	}
 }
 
+// MonitorTemperature 监控温度数据
 func (ms *MonitorService) MonitorTemperature(conn *websocket.Conn, deviceID string) error {
 	th := NewTemperatureHandler(conn, deviceID)
 	for {

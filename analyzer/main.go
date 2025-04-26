@@ -13,7 +13,7 @@ import (
 )
 
 func initKafka() {
-	// Initialize Kafka producers and consumers here
+	// 初始化Kafka，生产者和消费者
 	admin, err := kafka.NewAdmin(SINK_BROKERS)
 	if err != nil {
 		logger.Fatalf("Failed to create Kafka admin: %v", err)
@@ -24,9 +24,8 @@ func initKafka() {
 	if err != nil {
 		logger.Fatalf("Failed to check if topic device exists: %v", err)
 	}
-	retentionMs := "60000" // 1 minute in milliseconds
+	retentionMs := "60000" // 60s
 	if !isExists {
-		// Create topics for sink kafka if they don't exist
 		err = admin.CreateTopicWithConfig("device", map[string]*string{
 			"retention.ms": &retentionMs,
 		}, 3, 1)
@@ -34,7 +33,6 @@ func initKafka() {
 			logger.Fatalf("Failed to create topic device_temperature: %v", err)
 		}
 	} else {
-		// Update topic configuration if it exists
 		err = admin.UpdateTopic("device", map[string]*string{
 			"retention.ms": &retentionMs,
 		})
@@ -78,7 +76,7 @@ func main() {
 
 			if CurTemperature > device.MaxTemperature || CurTemperature < device.MinTemperature {
 				// 发送温度超限告警
-				logger.Warnf("Device %s current temperature is %f , out of range [%f, %f]", deviceID, CurTemperature, device.MinTemperature,device.MaxTemperature)
+				logger.Warnf("Device %s current temperature is %f , out of range [%f, %f]", deviceID, CurTemperature, device.MinTemperature, device.MaxTemperature)
 				if err := ch.AsyncInsert(context.Background(), InsertAlarmRecordSQL,
 					false, deviceID, "HIGH", fmt.Sprintf("Current temperature is %f , out of range [%f, %f]", CurTemperature, device.MinTemperature, device.MaxTemperature), "未读"); err != nil {
 					logger.Errorf("Failed to insert alarm record: %v", err)
@@ -104,8 +102,9 @@ func main() {
 
 	logger.Infof("Analyzer started")
 	tricker := time.NewTicker(time.Second * 1)
+	// 防止主函数退出
 	defer tricker.Stop()
 	for range tricker.C {
-		// do nothing
+		// 以后可以加入其他的东西，如心跳机制
 	}
 }

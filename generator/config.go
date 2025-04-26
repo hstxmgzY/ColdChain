@@ -8,12 +8,10 @@ import (
 
 var (
 	DEVICE_NUMBER            = 1000
-	DEVICE_ID_PREFIX         = "device_"
-	GENERSTION_RATE          = 1000  // 1000/s
+	GENERATION_RATE          = 1000  // 1000/s
 	BATTERY_CONSUMPTION_RATE = 0.001 // 0.1% per second
 
-	VEHICLE_NUMBER    = 1000
-	VEHICLE_ID_PREFIX = "vehicle_"
+	VEHICLE_NUMBER = 1000
 
 	DEVICE_DAMAGED_RATIO = 0.0001 // 0.01%
 
@@ -29,11 +27,8 @@ func ImportConfig() {
 	if viper.IsSet("generator.device_number") {
 		DEVICE_NUMBER = viper.GetInt("device_number")
 	}
-	if viper.IsSet("generator.device_id_prefix") {
-		DEVICE_ID_PREFIX = viper.GetString("device_id_prefix")
-	}
-	if viper.IsSet("generator.generstion_rate") {
-		GENERSTION_RATE = viper.GetInt("generator.generstion_rate")
+	if viper.IsSet("generator.generation_rate") {
+		GENERATION_RATE = viper.GetInt("generator.generation_rate")
 	}
 	if viper.IsSet("generator.battery_consumption_rate") {
 		BATTERY_CONSUMPTION_RATE = viper.GetFloat64("battery_consumption_rate")

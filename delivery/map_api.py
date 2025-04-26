@@ -1,17 +1,52 @@
 import requests
 import time
 
+API_KEY = "15807c9291055bcaaa80372f695f0ed0"
 
-API_KEY = "15807c9291055bcaaa80372f695f0ed0" 
+def address_to_location(address: str):
+    """
+    使用高德地图地理编码 API 将结构化地址转为经纬度 [lon, lat]。
+    - 限流至 3 QPS（即每次请求前 sleep 0.34s）
+    - 如果返回 CUQPS_HAS_EXCEEDED_THE_LIMIT，会等待并重试最多 3 次
+    返回 None 表示解析失败。
+    """
+    url = "https://restapi.amap.com/v3/geocode/geo"
+    params = {
+        "key": API_KEY,
+        "address": address,
+        "output": "JSON"
+    }
+    info = ""
+    for attempt in range(3):
+        # 限流，保持 <=3 QPS
+        time.sleep(0.34)
+        try:
+            resp = requests.get(url, params=params, timeout=5)
+            j = resp.json()
+        except Exception as e:
+            info = str(e)
+            continue
+
+        info = j.get("info", "")
+        # 如果是限流错误，等一秒再重试
+        if info == "CUQPS_HAS_EXCEEDED_THE_LIMIT":
+            time.sleep(1)
+            continue
+
+        # 正常成功
+        if j.get("status") == "1" and j.get("geocodes"):
+            loc = j["geocodes"][0]["location"]  # "116.480881,39.989410"
+            lon, lat = map(float, loc.split(","))
+            return [lon, lat]
+        # 其它错误，直接退出重试
+        break
+
+    print(f"地理编码失败: {address} → {info}")
+    return None
 
 def get_distance_via_amap(origin, destination):
     """
     使用高德地图驾车路径规划 API 获取真实驾车距离（单位：公里）。
-    参数:
-      origin: [lon, lat]（经度在前，纬度在后）
-      destination: [lon, lat]
-    返回:
-      路径距离（单位：公里），出错时返回 None
     """
     url = "https://restapi.amap.com/v5/direction/driving"
     params = {
@@ -19,67 +54,28 @@ def get_distance_via_amap(origin, destination):
         "destination": f"{destination[0]:.6f},{destination[1]:.6f}",
         "key": API_KEY,
         "strategy": 32,
-        "output": "json"
+        "output": "JSON"
     }
     try:
         time.sleep(0.2)
-        response = requests.get(url, params=params)
-        data = response.json()
-        if data.get("info") == "OK" and data.get("route", {}).get("paths"):
-            distance_m = float(data["route"]["paths"][0]["distance"])
-            return distance_m / 1000.0
-        else:
-            print("高德 API 请求失败：", data.get("info", "未知错误"))
-            return None
+        r = requests.get(url, params=params, timeout=5)
+        j = r.json()
+        if j.get("info") == "OK" and j.get("route", {}).get("paths"):
+            return float(j["route"]["paths"][0]["distance"]) / 1000.0
     except Exception as e:
-        print("请求或解析高德地图 API 出错：", e)
-        return None
+        print(f"请求高德驾车路径出错: {e}")
+    return None
 
 def compute_distance_matrix(locs):
     """
-    根据 locs 中所有节点对，预计算真实距离矩阵（单位：公里）。
-    参数:
-      locs: 数组，形状 (num_nodes, 2)，[lon, lat]
-    返回:
-      距离矩阵，二维列表，形状 (num_nodes, num_nodes)
+    预计算距离矩阵 (num_nodes x num_nodes)，单位：公里
+    locs: [[lon, lat], ...]
     """
-    num_nodes = len(locs)
-    dist_matrix = [[0.0] * num_nodes for _ in range(num_nodes)]
-    for i in range(num_nodes):
-        for j in range(num_nodes):
-            if i == j:
-                continue
-            distance = get_distance_via_amap(locs[i], locs[j])
-            if distance is None:
-                distance = 0.0
-            dist_matrix[i][j] = distance
-    return dist_matrix
-
-
-def generate_static_map_url(locs, trajectory, api_key=API_KEY, zoom=12, size="750*400"):
-    """
-    生成高德静态地图 URL，展示路径轨迹
-    参数：
-      locs: numpy 数组，形状 (num_nodes, 2)，每个点是 [lon, lat]
-      trajectory: List[int]，节点访问顺序
-      api_key: 高德 Web API Key（默认使用顶部设置的全局 API_KEY）
-    返回：
-      可访问的静态地图 URL
-    """
-    # 路径折线参数
-    path_coords = ";".join([f"{locs[i][0]:.6f},{locs[i][1]:.6f}" for i in trajectory])
-    path_param = f"paths=5,0x0000FF,1,,:{path_coords}"
-
-    # 标注点参数（最多10个）
-    marker_list = []
-    for idx, i in enumerate(trajectory[:10]):
-        lon, lat = locs[i]
-        marker_list.append(f"mid,0xFF0000,{idx}:{lon:.6f},{lat:.6f}")
-    markers_param = "markers=" + "|".join(marker_list)
-
-    # 拼接完整 URL
-    url = (
-        "https://restapi.amap.com/v3/staticmap?"
-        f"zoom={zoom}&size={size}&{path_param}&{markers_param}&key={api_key}"
-    )
-    return url
+    n = len(locs)
+    mat = [[0.0]*n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                d = get_distance_via_amap(locs[i], locs[j])
+                mat[i][j] = d if d is not None else 0.0
+    return mat

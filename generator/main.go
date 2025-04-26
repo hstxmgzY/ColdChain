@@ -13,7 +13,8 @@ import (
 )
 
 func initKafka() {
-	// Initialize Kafka producers and consumers here
+	// 初始化Kafka
+	// 连接Kafka
 	admin, err := kafka.NewAdmin(KAFKA_BROKERS)
 	if err != nil {
 		logger.Fatalf("Failed to create Kafka admin: %v", err)
@@ -24,17 +25,19 @@ func initKafka() {
 	if err != nil {
 		logger.Fatalf("Failed to check if topic device exists: %v", err)
 	}
-	retentionMs := "60000" // 7 days in milliseconds
+	retentionMs := "60000" // 保存60s
 	if !isExist {
-		// Create topics for sink kafka if they don't exist
+		// 如果topic不存在，则创建topic
+		// 3个分区，1个副本
 		err = admin.CreateTopicWithConfig("device", map[string]*string{
 			"retention.ms": &retentionMs,
 		}, 3, 1)
 		if err != nil {
 			logger.Fatalf("Failed to create topic device_temperature: %v", err)
 		}
+
 	} else {
-		// Update topic configuration if it exists
+		// 如果topic已经存在，则更新配置
 		err = admin.UpdateTopic("device", map[string]*string{
 			"retention.ms": &retentionMs,
 		})
@@ -93,7 +96,7 @@ func main() {
 		}
 	}()
 
-	tricker := time.NewTicker(time.Second / time.Duration(GENERSTION_RATE))
+	tricker := time.NewTicker(time.Second / time.Duration(GENERATION_RATE))
 	for range tricker.C {
 		modulesMut.Lock()
 		for _, device := range devices {

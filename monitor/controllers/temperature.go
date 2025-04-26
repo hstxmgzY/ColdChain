@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 列出一天的温度记录
+// 列出每个设备的最新温度数据
 func (m *Monitor) ListTemperature(ctx *gin.Context) {
 	temperatures, err := dao.GetDevicesLatestTemperature(m.ch)
 	if err != nil {
@@ -20,6 +20,7 @@ func (m *Monitor) ListTemperature(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, temperatures)
 }
 
+// 获取设备的报警记录
 func (m *Monitor) MonitorTemperature(ctx *gin.Context) {
 	deviceID := ctx.Param("deviceID")
 	if deviceID == "" {

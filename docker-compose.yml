@@ -1,66 +1,66 @@
 services:
     # 上游 kafka
-    broker.source:
-        image: apache/kafka:latest
-        container_name: broker-source
-        ports:
-            - "19092:19092"
-        environment:
-            KAFKA_NODE_ID: 1
-            KAFKA_PROCESS_ROLES: broker,controller
-            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.source:19092
-            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.source:9093
-            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-            KAFKA_NUM_PARTITIONS: 3
-        volumes:
-            - ./cold-chain-data/kafka-source/data:/var/lib/kafka/data
-            - ./cold-chain-data/kafka-source/secrets:/etc/kafka/secrets
-            - ./cold-chain-data/kafka-source/config:/mnt/shared/config
+    # broker.source:
+    #     image: apache/kafka:latest
+    #     container_name: broker-source
+    #     ports:
+    #         - "19092:19092"
+    #     environment:
+    #         KAFKA_NODE_ID: 1
+    #         KAFKA_PROCESS_ROLES: broker,controller
+    #         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
+    #         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.source:19092
+    #         KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    #         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    #         KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.source:9093
+    #         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    #         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    #         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    #         KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    #         KAFKA_NUM_PARTITIONS: 3
+    #     volumes:
+    #         - ./cold-chain-data/kafka-source/data:/var/lib/kafka/data
+    #         - ./cold-chain-data/kafka-source/secrets:/etc/kafka/secrets
+    #         - ./cold-chain-data/kafka-source/config:/mnt/shared/config
 
     # 下游 kafka
-    broker.sink:
-        image: apache/kafka:latest
-        container_name: broker-sink
-        ports:
-            - "29092:29092"
-        environment:
-            KAFKA_NODE_ID: 1
-            KAFKA_PROCESS_ROLES: broker,controller
-            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.sink:29092
-            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.sink:9093
-            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-            KAFKA_NUM_PARTITIONS: 3
-        volumes:
-            - ./cold-chain-data/kafka-sink/data:/var/lib/kafka/data
-            - ./cold-chain-data/kafka-sink/secrets:/etc/kafka/secrets
-            - ./cold-chain-data/kafka-sink/config:/mnt/shared/config
+    # broker.sink:
+    #     image: apache/kafka:latest
+    #     container_name: broker-sink
+    #     ports:
+    #         - "29092:29092"
+    #     environment:
+    #         KAFKA_NODE_ID: 1
+    #         KAFKA_PROCESS_ROLES: broker,controller
+    #         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+    #         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker.sink:29092
+    #         KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    #         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    #         KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker.sink:9093
+    #         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    #         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    #         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    #         KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    #         KAFKA_NUM_PARTITIONS: 3
+    #     volumes:
+    #         - ./cold-chain-data/kafka-sink/data:/var/lib/kafka/data
+    #         - ./cold-chain-data/kafka-sink/secrets:/etc/kafka/secrets
+    #         - ./cold-chain-data/kafka-sink/config:/mnt/shared/config
 
-    clickhouse:
-        image: clickhouse:24.8
-        container_name: clickhouse
-        ports:
-            - "9000:9000"
-        volumes:
-            - ./cold-chain-data/clickhouse/data:/var/lib/clickhouse
-            - ./common/clickhouse/sql/table.sql:/docker-entrypoint-initdb.d/table.sql
-            - ./cold-chain-data/clickhouse/log:/var/log/clickhouse-server
-        environment:
-            CLICKHOUSE_DB: coldchain
-            CLICKHOUSE_USER: "coldchain"
-            CLICKHOUSE_PASSWORD: 
-            TZ: "Asia/Shanghai"
+    # clickhouse:
+    #     image: clickhouse:24.8
+    #     container_name: clickhouse
+    #     ports:
+    #         - "9000:9000"
+    #     volumes:
+    #         - ./cold-chain-data/clickhouse/data:/var/lib/clickhouse
+    #         - ./common/clickhouse/sql/table.sql:/docker-entrypoint-initdb.d/table.sql
+    #         - ./cold-chain-data/clickhouse/log:/var/log/clickhouse-server
+    #     environment:
+    #         CLICKHOUSE_DB: coldchain
+    #         CLICKHOUSE_USER: "coldchain"
+    #         CLICKHOUSE_PASSWORD: 
+    #         TZ: "Asia/Shanghai"
 
     redis:
         image: redis:latest
@@ -86,17 +86,17 @@ services:
             MYSQL_ALLOW_EMPTY_PASSWORD: yes
             MYSQL_ROOT_HOST: '%'
 
-    nginx:
-        image: nginx:alpine
-        container_name: nginx
-        ports:
-            - "80:80"
-        volumes:
-            - ./nginx.conf:/etc/nginx/nginx.conf
-            - ./web/dist:/usr/share/nginx/html
-        depends_on:
-            - server
-            - monitor
+    # nginx:
+    #     image: nginx:alpine
+    #     container_name: nginx
+    #     ports:
+    #         - "80:80"
+    #     volumes:
+    #         - ./nginx.conf:/etc/nginx/nginx.conf
+    #         - ./web/dist:/usr/share/nginx/html
+    #     depends_on:
+    #         - server
+    #         - monitor
 
     server:
         build:
@@ -108,17 +108,17 @@ services:
         depends_on:
             - mysql
 
-    monitor:
-        build:
-            context: .
-            dockerfile: ./monitor/Dockerfile
-        container_name: monitor
-        ports:
-            - "9998:9998"
-        depends_on:
-            - broker.sink
-            - clickhouse
-            - mysql
+    # monitor:
+    #     build:
+    #         context: .
+    #         dockerfile: ./monitor/Dockerfile
+    #     container_name: monitor
+    #     ports:
+    #         - "9998:9998"
+    #     depends_on:
+    #         - broker.sink
+    #         - clickhouse
+    #         - mysql
 
     # delivery:
     #     build: ./delivery
@@ -126,45 +126,45 @@ services:
     #     ports:
     #     - "5000:5000"
 
-    analyzer1:
-        build:
-            context: .
-            dockerfile: ./analyzer/Dockerfile
-        image: coldchain-analyzer
-        container_name: analyzer1
-        depends_on:
-            - broker.sink
-            - clickhouse
-            - redis
-            - mysql
+    # analyzer1:
+    #     build:
+    #         context: .
+    #         dockerfile: ./analyzer/Dockerfile
+    #     image: coldchain-analyzer
+    #     container_name: analyzer1
+    #     depends_on:
+    #         - broker.sink
+    #         - clickhouse
+    #         - redis
+    #         - mysql
 
-    analyzer2:
-        image: coldchain-analyzer
-        container_name: analyzer2
-        depends_on:
-            - broker.sink
-            - clickhouse
-            - redis
-            - mysql
+    # analyzer2:
+    #     image: coldchain-analyzer
+    #     container_name: analyzer2
+    #     depends_on:
+    #         - broker.sink
+    #         - clickhouse
+    #         - redis
+    #         - mysql
 
-    analyzer3:
-        image: coldchain-analyzer
-        container_name: analyzer3
-        depends_on:
-            - broker.sink
-            - clickhouse
-            - redis
-            - mysql
+    # analyzer3:
+    #     image: coldchain-analyzer
+    #     container_name: analyzer3
+    #     depends_on:
+    #         - broker.sink
+    #         - clickhouse
+    #         - redis
+    #         - mysql
 
 
-    generator:
-        build:
-            context: .
-            dockerfile: ./generator/Dockerfile
-        container_name: generator
-        depends_on:
-            - broker.source
-            - mysql
+    # generator:
+    #     build:
+    #         context: .
+    #         dockerfile: ./generator/Dockerfile
+    #     container_name: generator
+    #     depends_on:
+    #         - broker.source
+    #         - mysql
 
     # web-mobile:
     #     context: ./web-mobile

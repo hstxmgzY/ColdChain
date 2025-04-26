@@ -19,7 +19,6 @@ type Device struct {
 
 func (d *Device) UpdateStat() {
 	// 更新设备状态
-	// 这里可以添加一些逻辑来更新设备的状态
 
 	// 生成电池电量数据
 	d.BatteryLevel -= BATTERY_CONSUMPTION_RATE

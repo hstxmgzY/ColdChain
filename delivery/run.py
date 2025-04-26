@@ -1,48 +1,94 @@
-import argparse
-# import torch
-import numpy as np
-from pdp_generator import PDPGenerator
+import argparse, json
+import numpy as np, torch
+from map_api import address_to_location, compute_distance_matrix
 from pdp_env import PDPEnv, rollout, greedy_policy
-from map_api import compute_distance_matrix, generate_static_map_url
+from pdp_generator import NODE_DEPOT, NODE_PICKUP, NODE_DELIVERY
+
+def prepare_data(coords):
+    num_orders = (len(coords)-1)//2
+    node_type = [NODE_DEPOT] + [NODE_PICKUP, NODE_DELIVERY]*num_orders
+    order_map = [-1] + [i for i in range(num_orders) for _ in range(2)]
+    order_load = torch.randint(1,11,(num_orders,),dtype=torch.int32)
+    return {
+        "locs":       torch.tensor([coords],dtype=torch.float32),
+        "node_type":  torch.tensor([node_type],dtype=torch.int64),
+        "order_map":  torch.tensor([order_map],dtype=torch.int64),
+        "order_load": order_load.unsqueeze(0),
+        "num_orders": num_orders
+    }
+
+def segment_trajectories(full_traj, node_types):
+    """
+    按送货节点在 full_traj 中出现的顺序，切分成若干段：
+    - 第一段：以 depot(0) 开头，到第一个配送节点结束。
+    - 后续段：以上一配送节点开头，到本次配送节点结束。
+    """
+    segments = []
+    prev_idx = -1  # 上一次配送节点在 full_traj 中的下标
+    for idx, node in enumerate(full_traj):
+        # node_types[node] == 2 表示这是一个送货节点
+        if node_types[node] == 2:
+            if prev_idx < 0:
+                # 第一段
+                seg = [0] + full_traj[:idx+1]
+            else:
+                # 后续段
+                seg = [full_traj[prev_idx]] + full_traj[prev_idx+1:idx+1]
+            segments.append(seg)
+            prev_idx = idx
+    return segments
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PDP 路径规划带地图 API 集成")
-    parser.add_argument("--batch_size", type=int, default=1, help="批处理大小")
-    parser.add_argument("--num_orders", type=int, default=3, help="每个实例订单数量")
-    args = parser.parse_args()
+    p = argparse.ArgumentParser("地址版PDP路径规划")
+    p.add_argument("--depot",  required=True, help="仓库地址")
+    p.add_argument("--orders", nargs="+", required=True,
+                   help="每笔订单 pickup;delivery，用分号分隔")
+    args = p.parse_args()
 
-    # 生成 PDP 数据
-    generator = PDPGenerator(num_orders=args.num_orders)
-    data = generator.generate(batch_size=args.batch_size)
+    # 1. 地理编码：地址→坐标
+    coords = []
+    depot_loc = address_to_location(args.depot)
+    if not depot_loc:
+        raise SystemExit(f"仓库解析失败: {args.depot}")
+    coords.append(depot_loc)
+    for od in args.orders:
+        try:
+            pu_addr, de_addr = od.split(";",1)
+        except:
+            raise SystemExit(f"订单格式错误: {od}")
+        pu_loc = address_to_location(pu_addr)
+        de_loc = address_to_location(de_addr)
+        if not pu_loc or not de_loc:
+            raise SystemExit(f"地址解析失败: {od}")
+        coords.extend([pu_loc, de_loc])
 
-    locs_np = data["locs"].squeeze(0).numpy()
+    # 2. 计算距离矩阵 & 准备环境数据
+    dist_mat = compute_distance_matrix(coords)
+    data     = prepare_data(coords)
 
-    print("预计算距离矩阵，请稍候...")
-    distance_matrix = compute_distance_matrix(locs_np)  # 🔄 不再传 api_key
-    print("距离矩阵预计算完成。")
+    # 3. 路径规划
+    env       = PDPEnv(vehicle_capacity=20)
+    state     = env.reset(data)
+    _, trajs  = rollout(env, state, dist_mat, policy=greedy_policy, max_steps=100)
+    full_traj = trajs[0]  # 完整访问序列，不含 depot
 
-    # 初始化环境
-    env = PDPEnv(vehicle_capacity=20)
-    state = env.reset(data)
-    print("初始状态:")
-    env.render(state)
+    # 4. 拆分每笔订单的轨迹
+    # 4. 分段：按实际送货节点顺序
+    node_types = data["node_type"][0].tolist()  # [0,1,2,1,2,...]
+    segments = segment_trajectories(full_traj, node_types)
 
-    final_state, trajectories = rollout(env, state, distance_matrix, policy=greedy_policy, max_steps=50)
-    print("\n最终状态:")
-    env.render(final_state)
-    for b in range(args.batch_size):
-        print(f"实例 {b} 的轨迹: {trajectories[b]}")
-    reward = env.get_reward(final_state)
-    print("\n奖励 (负累计距离):", reward.tolist())
-    print("\n配送路径地图链接：")
-    for b in range(args.batch_size):
-        locs = data["locs"][b].numpy()
-        traj = trajectories[b]
-        map_url = generate_static_map_url(locs, traj)
-        print(f"实例 {b} 路径图：{map_url}")
+    # 5. 构造 locs 输出
+    locs_out = []
+    for i,(lon,lat) in enumerate(coords):
+        locs_out.append({
+            "position": [lon, lat],
+            "nodeType":   data["node_type"][0,i].item(),
+            "orderId":    data["order_map"][0,i].item()
+        })
 
-if __name__ == "__main__":
+    result = {"locs": locs_out, "trajectories": segments}
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__=="__main__":
     main()
-
-
