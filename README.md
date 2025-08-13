@@ -119,8 +119,6 @@ go run main.go
 
 ---
 
-If you want, I can help polish or adapt it for a specific audience or platform.
-
 
 
 
