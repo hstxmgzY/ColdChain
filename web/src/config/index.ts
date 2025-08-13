@@ -44,6 +44,29 @@ export default [
         url: "/user/index",
     },
     {
+        path:"/home/system",
+        name:"system",
+        label:"系统管理",
+        icon:"SettingOutlined",
+        url:"/system/index",
+        children:[
+            {
+                path:"/home/system/role",
+                name:"role",
+                label:"角色管理",
+                icon:"UsergroupAddOutlined",
+                url:"/system/role",
+            },
+            {
+                path:"/home/system/log",
+                name:"log",
+                label:"操作日志",
+                icon:"FileProtectOutlined",
+                url:"/system/log",
+            },
+        ]
+    },
+    {
         path: "/home/order",
         name: "order",
         label: "运输订单管理",
@@ -64,21 +87,21 @@ export default [
                 icon: "ShoppingCartOutlined",
                 url: "/order/lease",
             },
-            {
-                path: "/home/order/monitor",
-                name: "monitor",
-                label: "实时监控",
-                icon: "VideoCameraOutlined",
-                url: "/order/monitor",
-            },
+            // {
+            //     path: "/home/order/monitor",
+            //     name: "monitor",
+            //     label: "实时监控",
+            //     icon: "VideoCameraOutlined",
+            //     url: "/order/monitor",
+            // },
 
-            {
-                path: "/home/order/tracking",
-                name: "tracking",
-                label: "订单跟踪",
-                icon: "ControlOutlined",
-                url: "/order/tracking",
-            },
+            // {
+            //     path: "/home/order/tracking",
+            //     name: "tracking",
+            //     label: "订单跟踪",
+            //     icon: "ControlOutlined",
+            //     url: "/order/tracking",
+            // },
         ],
     },
     {

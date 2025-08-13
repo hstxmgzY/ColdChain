@@ -604,9 +604,9 @@ func (c *OrderController) RejectOrder(ctx *gin.Context) {
 }
 
 func (c *OrderController) PayOrder(ctx *gin.Context) {
-	var req dto.PayOrderRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+	orderID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的订单ID"})
 		return
 	}
 
@@ -616,7 +616,7 @@ func (c *OrderController) PayOrder(ctx *gin.Context) {
 		return
 	}
 
-	err = c.orderRepo.UpdateStatus(req.OrderID, payedStatusID)
+	err = c.orderRepo.UpdateStatus(uint(orderID), payedStatusID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新订单状态失败"})
 		return

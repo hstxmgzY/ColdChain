@@ -1,0 +1,10 @@
+num_ants,method,total_distance(km),elapsed_time(s),optimize_rate(%)
+10,aco,240.56,18.6490,-
+10,greedy_then_aco,234.12,18.3937,-
+10,greedy_then_mmas,230.56,18.3012,-
+20,aco,174.42,36.7618,-
+20,greedy_then_aco,174.42,36.7382,-
+20,greedy_then_mmas,174.42,36.9844,-
+40,aco,215.30,73.6890,-
+40,greedy_then_aco,215.30,73.2607,-
+40,greedy_then_mmas,215.30,73.4096,-

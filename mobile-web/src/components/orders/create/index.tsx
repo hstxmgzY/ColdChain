@@ -183,13 +183,12 @@ const OrderCreate = () => {
           >
             <Input
               value={selectedSenderPhone || order.sender_info?.phone || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedSenderPhone(val); // 更新本地状态
+              onChange={(val) => {
+                setSelectedSenderPhone(val);
                 dispatch(
                   setSenderInfo({
                     ...order.sender_info,
-                    phone: val, // 更新 Redux 中的 sender_info
+                    phone: val,
                   })
                 );
               }}
@@ -256,13 +255,12 @@ const OrderCreate = () => {
           >
             <Input
               value={selectedReceiverPhone || order.receiver_info?.phone || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedReceiverPhone(val); // 更新本地状态
+              onChange={(val) => {
+                setSelectedReceiverPhone(val);
                 dispatch(
                   setReceiverInfo({
                     ...order.receiver_info,
-                    phone: val, // 更新 Redux 中的 receiver_info
+                    phone: val,
                   })
                 );
               }}

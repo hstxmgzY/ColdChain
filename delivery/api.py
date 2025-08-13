@@ -15,7 +15,7 @@ import torch
 import numpy as np
 import logging
 
-# ---------- 数据库配置，根据实际替换 ------------
+# ---------- 数据库配置 ------------
 DATABASE_URL = "mysql+pymysql://root:@localhost:3306/coldchain?charset=utf8mb4"
 
 engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)

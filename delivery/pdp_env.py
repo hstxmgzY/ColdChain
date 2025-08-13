@@ -170,6 +170,317 @@ def greedy_policy(state, env, distance_matrix):
             actions[b] = torch.argmin(dists)
     return actions
 
+def aco_policy(state, env, distance_matrix, num_ants=20, num_iters=30, alpha=1.0, beta=5.0, rho=0.1, q=100):
+    batch_size, num_nodes, _ = state["locs"].shape
+    actions = torch.zeros(batch_size, dtype=torch.int64)
+
+    for b in range(batch_size):
+        if state["done"][b]:
+            actions[b] = state["current_node"][b]
+            continue
+
+        pheromone = torch.ones((num_nodes, num_nodes)) * 0.1
+        best_path = None
+        best_length = float('inf')
+
+        for _ in range(num_iters):
+            for _ in range(num_ants):
+                temp_state = {k: v.clone() if isinstance(v, torch.Tensor) else v for k,v in state.items()}
+                path = []
+                total_length = 0.0
+                current_node = temp_state["current_node"][b].item()
+
+                while not temp_state["done"][b]:
+                    mask = temp_state["action_mask"][b]
+                    probs = torch.zeros(num_nodes)
+                    for j in range(num_nodes):
+                        if mask[j]:
+                            probs[j] = (pheromone[current_node][j]**alpha) * ((1.0/distance_matrix[current_node][j])**beta)
+                    if probs.sum() == 0:
+                        break
+                    probs /= probs.sum()
+                    next_node = torch.multinomial(probs, 1).item()
+                    path.append(next_node)
+                    total_length += distance_matrix[current_node][next_node]
+                    temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+                    current_node = next_node
+
+                if total_length < best_length:
+                    best_length = total_length
+                    best_path = path
+
+            pheromone *= (1 - rho)
+            if best_path:
+                for i in range(len(best_path)-1):
+                    u, v = best_path[i], best_path[i+1]
+                    pheromone[u][v] += q / (best_length + 1e-5)
+
+        if best_path and len(best_path) > 0:
+            actions[b] = best_path[0]
+        else:
+            actions[b] = state["current_node"][b]
+
+    return actions
+
+def greedy_then_aco_policy(state, env, distance_matrix, num_ants=20, num_iters=30, alpha=1.0, beta=5.0, rho=0.1, q=100):
+    """
+    贪心-蚁群混合策略：
+    先用贪心生成初解，并用初解初始化信息素，
+    再用蚁群算法进行进一步优化。
+    """
+    batch_size, num_nodes, _ = state["locs"].shape
+    actions = torch.zeros(batch_size, dtype=torch.int64)
+
+    for b in range(batch_size):
+        if state["done"][b]:
+            actions[b] = state["current_node"][b]
+            continue
+
+        # Step1: 贪心初解
+        temp_state = {k: v.clone() if isinstance(v, torch.Tensor) else v for k,v in state.items()}
+        greedy_path = []
+        current_node = temp_state["current_node"][b].item()
+
+        while not temp_state["done"][b]:
+            mask = temp_state["action_mask"][b]
+            dists = torch.tensor(distance_matrix[current_node])
+            dists[~mask] = float('inf')
+            if torch.all(torch.isinf(dists)):
+                break
+            next_node = torch.argmin(dists).item()
+            greedy_path.append(next_node)
+            temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+            current_node = next_node
+
+        # Step2: 初始化信息素
+        pheromone = torch.ones((num_nodes, num_nodes)) * 0.1
+        for i in range(len(greedy_path)-1):
+            u, v = greedy_path[i], greedy_path[i+1]
+            pheromone[u][v] += q / (len(greedy_path)+1e-5)
+
+        best_path = None
+        best_length = float('inf')
+
+        # Step3: 蚁群多轮搜索
+        for _ in range(num_iters):
+            for _ in range(num_ants):
+                temp_state = {k: v.clone() if isinstance(v, torch.Tensor) else v for k,v in state.items()}
+                path = []
+                total_length = 0.0
+                current_node = temp_state["current_node"][b].item()
+
+                while not temp_state["done"][b]:
+                    mask = temp_state["action_mask"][b]
+                    probs = torch.zeros(num_nodes)
+                    for j in range(num_nodes):
+                        if mask[j]:
+                            probs[j] = (pheromone[current_node][j]**alpha) * ((1.0/distance_matrix[current_node][j])**beta)
+                    if probs.sum() == 0:
+                        break
+                    probs /= probs.sum()
+                    next_node = torch.multinomial(probs, 1).item()
+                    path.append(next_node)
+                    total_length += distance_matrix[current_node][next_node]
+                    temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+                    current_node = next_node
+
+                if total_length < best_length:
+                    best_length = total_length
+                    best_path = path
+
+            pheromone *= (1 - rho)
+            if best_path:
+                for i in range(len(best_path)-1):
+                    u, v = best_path[i], best_path[i+1]
+                    pheromone[u][v] += q / (best_length + 1e-5)
+
+        if best_path and len(best_path) > 0:
+            actions[b] = best_path[0]
+        else:
+            actions[b] = state["current_node"][b]
+
+    return actions
+
+def greedy_then_mmas_policy(state, env, distance_matrix, num_ants=20, num_iters=30, alpha=1.0, beta=5.0, rho=0.1, q=100, p_best=0.005):
+    """
+    贪心-Max-Min蚁群混合策略：
+    先用贪心生成初解，并以初解路径长度归一化设置信息素上限，
+    然后基于Max-Min Ant System进行路径优化。
+    """
+    batch_size, num_nodes, _ = state["locs"].shape
+    actions = torch.zeros(batch_size, dtype=torch.int64)
+
+    for b in range(batch_size):
+        if state["done"][b]:
+            actions[b] = state["current_node"][b]
+            continue
+
+        # Step1: 贪心初解
+        temp_state = {k: v.clone() if isinstance(v, torch.Tensor) else v for k, v in state.items()}
+        greedy_path = []
+        current_node = temp_state["current_node"][b].item()
+
+        while not temp_state["done"][b]:
+            mask = temp_state["action_mask"][b]
+            dists = torch.tensor(distance_matrix[current_node])
+            dists[~mask] = float('inf')
+            if torch.all(torch.isinf(dists)):
+                break
+            next_node = torch.argmin(dists).item()
+            greedy_path.append(next_node)
+            temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+            current_node = next_node
+
+        # 计算贪心路径总长度
+        greedy_length = sum(distance_matrix[greedy_path[i]][greedy_path[i+1]] for i in range(len(greedy_path)-1))
+
+        # Step2: 初始化信息素
+        tau_max = q / (greedy_length + 1e-5)
+        pheromone = torch.ones((num_nodes, num_nodes)) * tau_max
+
+        avg = num_nodes / 2
+        tau_min = tau_max * (1 - p_best) / (avg - 1)
+
+        best_path = None
+        best_length = float('inf')
+
+        # Step3: Max-Min蚁群多轮搜索
+        for _ in range(num_iters):
+            paths = []
+            lengths = []
+
+            for _ in range(num_ants):
+                temp_state = {k: v.clone() if isinstance(v, torch.Tensor) else v for k, v in state.items()}
+                path = []
+                total_length = 0.0
+                current_node = temp_state["current_node"][b].item()
+
+                while not temp_state["done"][b]:
+                    mask = temp_state["action_mask"][b]
+                    probs = torch.zeros(num_nodes)
+                    for j in range(num_nodes):
+                        if mask[j]:
+                            probs[j] = (pheromone[current_node][j]**alpha) * ((1.0/distance_matrix[current_node][j])**beta)
+                    if probs.sum() == 0:
+                        break
+                    probs /= probs.sum()
+                    next_node = torch.multinomial(probs, 1).item()
+                    path.append(next_node)
+                    total_length += distance_matrix[current_node][next_node]
+                    temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+                    current_node = next_node
+
+                paths.append(path)
+                lengths.append(total_length)
+
+            # 选本轮最优
+            min_idx = torch.argmin(torch.tensor(lengths)).item()
+            if lengths[min_idx] < best_length:
+                best_length = lengths[min_idx]
+                best_path = paths[min_idx]
+
+            # 信息素挥发
+            pheromone *= (1 - rho)
+
+            # 只强化最优路径
+            if best_path and len(best_path) > 1:
+                for i in range(len(best_path)-1):
+                    u, v = best_path[i], best_path[i+1]
+                    pheromone[u][v] += q / (best_length + 1e-5)
+
+            # Max-Min边界控制
+            pheromone = torch.clamp(pheromone, min=tau_min, max=tau_max)
+
+        # 选择动作
+        if best_path and len(best_path) > 0:
+            actions[b] = best_path[0]
+        else:
+            actions[b] = state["current_node"][b]
+
+    return actions
+
+def high_quality_greedy_initial_path(state, env, distance_matrix, b):
+    temp_state = {k: v.clone() for k, v in state.items()}
+    path = []
+
+    while not temp_state["done"][b]:
+        mask = temp_state["action_mask"][b]
+        current_node = temp_state["current_node"][b].item()
+        best_next_node, best_cost = None, float('inf')
+
+        for next_node in mask.nonzero(as_tuple=True)[0].tolist():
+            cost = distance_matrix[current_node][next_node]
+            if cost < best_cost:
+                best_cost = cost
+                best_next_node = next_node
+
+        if best_next_node is None:
+            break
+
+        path.append(best_next_node)
+        temp_state = env.step(temp_state, torch.tensor([best_next_node]), distance_matrix)
+
+    return path, temp_state["total_distance"][b].item()
+
+
+def stable_greedy_then_aco_policy(state, env, distance_matrix,
+                                       num_ants=30, num_iters=60, alpha=1.0, beta=4.0, rho=0.15, q=100):
+    batch_size, num_nodes, _ = state["locs"].shape
+    actions = torch.zeros(batch_size, dtype=torch.int64)
+
+    for b in range(batch_size):
+        if state["done"][b]:
+            actions[b] = state["current_node"][b]
+            continue
+
+        # Step1: 高质量贪心初始路径
+        greedy_path, greedy_length = high_quality_greedy_initial_path(state, env, distance_matrix, b)
+
+        # Step2: 初始信息素
+        pheromone = torch.ones((num_nodes, num_nodes)) * 0.1
+        for i in range(len(greedy_path) - 1):
+            pheromone[greedy_path[i]][greedy_path[i + 1]] += q / (greedy_length + 1e-5)
+
+        best_path, best_length = greedy_path, greedy_length
+
+        # Step3: 蚁群搜索
+        for _ in range(num_iters):
+            paths, lengths = [], []
+
+            for _ in range(num_ants):
+                temp_state = {k: v.clone() for k, v in state.items()}
+                path, total_length = [], 0.0
+
+                while not temp_state["done"][b]:
+                    current_node = temp_state["current_node"][b].item()
+                    mask = temp_state["action_mask"][b]
+                    feasible_nodes = mask.nonzero(as_tuple=True)[0].tolist()
+                    probs = torch.tensor([(pheromone[current_node][j] ** alpha) * ((1.0 / distance_matrix[current_node][j]) ** beta) for j in feasible_nodes])
+                    probs /= probs.sum()
+                    next_node = feasible_nodes[torch.multinomial(probs, 1).item()]
+                    path.append(next_node)
+                    total_length += distance_matrix[current_node][next_node]
+                    temp_state = env.step(temp_state, torch.tensor([next_node]), distance_matrix)
+
+                paths.append(path)
+                lengths.append(total_length)
+
+            min_idx = torch.argmin(torch.tensor(lengths)).item()
+            if lengths[min_idx] < best_length:
+                best_length, best_path = lengths[min_idx], paths[min_idx]
+
+            pheromone *= (1 - rho)
+            for update_path in [paths[min_idx], best_path]:
+                for i in range(len(update_path) - 1):
+                    u, v = update_path[i], update_path[i + 1]
+                    pheromone[u][v] += q / (best_length + 1e-5)
+
+        next_node = best_path[0] if best_path else state["current_node"][b]
+        actions[b] = next_node
+
+    return actions
+
+
 def rollout(env, state, distance_matrix, policy=greedy_policy, max_steps=50):
     """
     根据 policy 进行 rollout，直至所有实例完成或达到最大步数。
@@ -188,12 +499,12 @@ def rollout(env, state, distance_matrix, policy=greedy_policy, max_steps=50):
             current = state["current_node"][b].item()
             next_node = actions[b].item()
             dist = distance_matrix[current][next_node]
-            print(f"\n🧭 实例 {b} - 步骤 {steps + 1}")
-            print(f"  从节点 {current} -> {next_node}，本次距离: {dist:.2f} km")
-            print(f"  当前累计距离: {state['total_distance'][b].item():.2f} km")
-            print(f"  当前载荷: {state['current_load'][b].item()}")
-            print(f"  已取货订单: {state['pickup_done'][b].tolist()}")
-            print(f"  已送达订单: {state['delivery_done'][b].tolist()}")
+            # print(f"\n🧭 实例 {b} - 步骤 {steps + 1}")
+            # print(f"  从节点 {current} -> {next_node}，本次距离: {dist:.2f} km")
+            # print(f"  当前累计距离: {state['total_distance'][b].item():.2f} km")
+            # print(f"  当前载荷: {state['current_load'][b].item()}")
+            # print(f"  已取货订单: {state['pickup_done'][b].tolist()}")
+            # print(f"  已送达订单: {state['delivery_done'][b].tolist()}")
 
         for b in range(batch_size):
             trajectories[b].append(actions[b].item())
@@ -202,4 +513,3 @@ def rollout(env, state, distance_matrix, policy=greedy_policy, max_steps=50):
         steps += 1
 
     return state, trajectories
-

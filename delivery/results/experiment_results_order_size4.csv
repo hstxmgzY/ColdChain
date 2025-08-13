@@ -1,0 +1,13 @@
+n_orders,method,total_distance(km),elapsed_time(s),optimize_rate(%)
+5,greedy,192.48,0.0014,-
+5,aco,159.20,6.8129,17.29%
+5,greedy_then_aco,159.52,6.8742,17.12%
+5,greedy_then_mmas,159.20,6.7920,17.29%
+10,greedy,250.06,0.0039,-
+10,aco,215.96,42.7452,13.64%
+10,greedy_then_aco,219.40,41.5494,12.26%
+10,greedy_then_mmas,213.05,42.0705,14.80%
+20,greedy,340.10,0.0136,-
+20,aco,284.22,287.4488,16.43%
+20,greedy_then_aco,282.57,286.5116,16.91%
+20,greedy_then_mmas,282.57,284.8862,16.91%

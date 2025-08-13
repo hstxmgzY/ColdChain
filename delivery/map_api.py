@@ -1,7 +1,7 @@
 import requests
 import time
 
-API_KEY = "15807c9291055bcaaa80372f695f0ed0"
+API_KEY = "c0a17ac02b090604b4f6ba42f23db2e4"
 
 def address_to_location(address: str):
     """
@@ -78,4 +78,24 @@ def compute_distance_matrix(locs):
             if i != j:
                 d = get_distance_via_amap(locs[i], locs[j])
                 mat[i][j] = d if d is not None else 0.0
+    return mat
+
+
+def compute_distance_matrix2(locs):
+    """
+    快速版：用欧几里得距离近似代替真实驾车距离（单位：公里）。
+    locs: [[lon, lat], ...]
+    """
+    n = len(locs)
+    mat = [[0.0]*n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                # 简单计算两点欧氏距离
+                lon1, lat1 = locs[i]
+                lon2, lat2 = locs[j]
+                dx = (lon1 - lon2) * 111  # 大约每度经度对应111公里
+                dy = (lat1 - lat2) * 111  # 大约每度纬度对应111公里
+                d = (dx**2 + dy**2)**0.5
+                mat[i][j] = d
     return mat

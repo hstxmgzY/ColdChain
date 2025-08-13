@@ -6,6 +6,10 @@ export const getOrderListByUserId = async (userId:number) => {
     return response
 }
 
+export const getOrderDetail = (id: number) => {
+    return http.get(`/orders/${id}`); 
+};
+
 // 创建订单
 export const createOrder = async (orderData: Partial<Order>) => {
     return await http.post<Order>("/orders/create", orderData)
@@ -27,5 +31,5 @@ export const deleteOrder = async (id: number) => {
 
 // 支付后更改订单状态
 export const updatePaiedStatus = async (id: number) => {
-    return await http.put<Order>(`/orders/pay/${id}`)
+    return await http.post<Order>(`/orders/pay/${id}`)
 }

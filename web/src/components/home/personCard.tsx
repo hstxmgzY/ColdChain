@@ -79,7 +79,7 @@ const PersonCard: React.FC = () => {
         <div>
           <Text type="secondary">上次登录时间：</Text>
           <Text type="secondary">
-            {userInfo?.lastLogin || "2025-04-18"} {/* 根据实际字段调整 */}
+            {userInfo?.lastLogin || "2025-05-01"} {/* 根据实际字段调整 */}
           </Text>
         </div>
 

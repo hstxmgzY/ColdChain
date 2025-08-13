@@ -1,8 +1,14 @@
 import argparse, json
 import numpy as np, torch
 from map_api import address_to_location, compute_distance_matrix
-from pdp_env import PDPEnv, rollout, greedy_policy
+from pdp_env import PDPEnv, rollout, greedy_policy, greedy_then_aco_policy, aco_policy
 from pdp_generator import NODE_DEPOT, NODE_PICKUP, NODE_DELIVERY
+
+policy_options = {
+    "greedy": greedy_policy,
+    "aco": aco_policy,
+    "greedy_then_aco": greedy_then_aco_policy,
+}
 
 def prepare_data(coords):
     num_orders = (len(coords)-1)//2
@@ -44,6 +50,9 @@ def main():
     p.add_argument("--depot",  required=True, help="仓库地址")
     p.add_argument("--orders", nargs="+", required=True,
                    help="每笔订单 pickup;delivery，用分号分隔")
+    p.add_argument("--method", type=str, default="greedy",
+                   choices=["greedy", "greedy_then_aco"],
+                   help="路径规划策略")
     args = p.parse_args()
 
     # 1. 地理编码：地址→坐标
@@ -70,7 +79,8 @@ def main():
     # 3. 路径规划
     env       = PDPEnv(vehicle_capacity=20)
     state     = env.reset(data)
-    _, trajs  = rollout(env, state, dist_mat, policy=greedy_policy, max_steps=100)
+    policy_fn = policy_options.get(args.method, greedy_policy)
+    _, trajs  = rollout(env, state, dist_mat, policy=policy_fn, max_steps=100)
     full_traj = trajs[0]  # 完整访问序列，不含 depot
 
     # 4. 拆分每笔订单的轨迹

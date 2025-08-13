@@ -1,0 +1,10 @@
+n_orders,method,total_distance(km),elapsed_time(s),optimize_rate(%)
+5,ACO,159.20,3.8410,17.29%
+5,Greedy,192.48,0.0085,-
+5,Greedy+ACO,159.52,3.9454,17.12%
+10,ACO,215.32,24.1019,13.90%
+10,Greedy,250.06,0.0043,-
+10,Greedy+ACO,219.40,24.3190,12.26%
+20,ACO,289.71,545.8546,14.82%
+20,Greedy,340.10,0.0144,-
+20,Greedy+ACO,284.22,166.7870,16.43%

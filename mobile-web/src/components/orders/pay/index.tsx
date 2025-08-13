@@ -40,6 +40,7 @@ const OrderPay = () => {
 
     setTimeout(async () => {
       try {
+        console.log(order);
         await updatePaiedStatus(order.id); // 调用支付状态更新 API
         Toast.show({
           icon: "success",

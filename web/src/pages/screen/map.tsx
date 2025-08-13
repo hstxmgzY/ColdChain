@@ -9,9 +9,9 @@ const Map = () => {
   return (
     <div>
       <MapRouteViewer
-        jsApiKey="bc7a516a5ffa5e4869a3fd16367d05f4"
-        securityJsCode="797c8ec621379363b489cd13e16e37c2"
-        webServiceKey="15807c9291055bcaaa80372f695f0ed0"
+        jsApiKey="447824cbde7391ff5c3971e8d7e24a69"
+        securityJsCode="dbaa66b505e327b4abedfe9a5a603a5a"
+        webServiceKey="c0a17ac02b090604b4f6ba42f23db2e4"
         // locs={[
         //   { position: [121.636, 29.92], nodeType: 0, orderId: -1 },
         //   { position: [121.636, 29.909], nodeType: 1, orderId: 0 },
